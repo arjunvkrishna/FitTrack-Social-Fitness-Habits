@@ -38,6 +38,20 @@ const Register = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-text-muted flex items-center gap-2">
+                            <UserIcon size={16} /> Full Name
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition-all"
+                            placeholder="John Doe"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-text-muted flex items-center gap-2">
                             <UserIcon size={16} /> Username
                         </label>
                         <input

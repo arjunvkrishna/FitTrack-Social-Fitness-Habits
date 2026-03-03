@@ -47,6 +47,7 @@ export const register = async (req: Request, res: Response) => {
             },
         });
     } catch (err) {
+        console.error('Registration error:', err);
         res.status(500).json({ message: 'Server error during registration' });
     }
 };
@@ -76,6 +77,7 @@ export const login = async (req: Request, res: Response) => {
             },
         });
     } catch (err) {
+        console.error('Login error:', err);
         res.status(500).json({ message: 'Server error during login' });
     }
 };
@@ -122,6 +124,7 @@ export const setupAdmin = async (req: Request, res: Response) => {
             }
         });
     } catch (err) {
+        console.error('Admin setup error:', err);
         res.status(500).json({ message: 'Error during admin setup' });
     }
 };
