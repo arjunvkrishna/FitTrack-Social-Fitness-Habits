@@ -1,0 +1,227 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { User, Lock, Camera, Eye, Shield, Save, EyeOff } from 'lucide-react';
+
+const Profile = () => {
+    const { user, login } = useAuth(); // We'll use a hack to update the user in context by re-fetching or just manual update
+    const [formData, setFormData] = useState({
+        name: user?.name || '',
+        username: user?.username || '',
+        gender: user?.gender || 'OTHER',
+        profilePicture: user?.profilePicture || '',
+        privacySettings: user?.privacySettings || {
+            showProfilePicture: 'PUBLIC',
+            showAchievements: 'PUBLIC',
+            showStats: 'PUBLIC'
+        }
+    });
+
+    const [passwords, setPasswords] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+
+    const [status, setStatus] = useState({ type: '', message: '' });
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await axios.put('/api/users/profile', formData);
+            setStatus({ type: 'success', message: 'Profile updated successfully!' });
+            // Update local storage and context could be done here if we had a proper 'updateUser' in AuthContext
+            localStorage.setItem('user', JSON.stringify(res.data));
+            window.location.reload(); // Simple way to refresh context for now
+        } catch (err: any) {
+            setStatus({ type: 'error', message: err.response?.data?.message || 'Update failed' });
+        }
+    };
+
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwords.newPassword !== passwords.confirmPassword) {
+            return setStatus({ type: 'error', message: 'Passwords do not match' });
+        }
+        try {
+            await axios.put('/api/users/password', {
+                currentPassword: passwords.currentPassword,
+                newPassword: passwords.newPassword
+            });
+            setStatus({ type: 'success', message: 'Password reset successfully!' });
+            setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (err: any) {
+            setStatus({ type: 'error', message: err.response?.data?.message || 'Password reset failed' });
+        }
+    };
+
+    return (
+        <div className="container py-8 px-4 max-w-4xl mx-auto">
+            <motion.h1
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-bold mb-8 gradient-text"
+            >
+                Account Settings
+            </motion.h1>
+
+            {status.message && (
+                <div className={`p-4 mb-6 rounded-xl glass ${status.type === 'success' ? 'border-accent text-accent' : 'border-secondary text-secondary'}`}>
+                    {status.message}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Left Column: Profile Pic & Info */}
+                <div className="space-y-6">
+                    <div className="glass p-6 text-center">
+                        <div className="relative inline-block mb-4">
+                            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-white/5 flex items-center justify-center">
+                                {formData.profilePicture ? (
+                                    <img src={formData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User size={64} className="text-text-muted" />
+                                )}
+                            </div>
+                            <button className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white hover:bg-primary-hover transition-colors shadow-lg">
+                                <Camera size={16} />
+                            </button>
+                        </div>
+                        <h2 className="text-xl font-bold">{formData.name}</h2>
+                        <p className="text-text-muted">@{formData.username}</p>
+                    </div>
+
+                    <div className="glass p-6 space-y-4">
+                        <h3 className="font-bold flex items-center gap-2">
+                            <Shield size={18} className="text-primary" /> Privacy Settings
+                        </h3>
+                        {Object.keys(formData.privacySettings).map((key) => (
+                            <div key={key} className="space-y-1">
+                                <label className="text-xs text-text-muted uppercase tracking-widest">
+                                    {key.replace('show', '').replace(/([A-Z])/g, ' $1')} Visibility
+                                </label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm outline-none"
+                                    value={(formData.privacySettings as any)[key]}
+                                    onChange={(e) => setFormData({
+                                        ...formData,
+                                        privacySettings: { ...formData.privacySettings, [key]: e.target.value }
+                                    })}
+                                >
+                                    <option value="PUBLIC">Public</option>
+                                    <option value="FRIENDS">Friends Only</option>
+                                    <option value="PRIVATE">Private</option>
+                                </select>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right Column: Edit Forms */}
+                <div className="md:col-span-2 space-y-8">
+                    {/* General Profile */}
+                    <div className="glass p-8">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                            <User size={20} className="text-primary" /> Edit Profile
+                        </h3>
+                        <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-muted">Full Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-muted">Username</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-muted">Gender</label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                    value={formData.gender}
+                                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as any })}
+                                >
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-muted">Profile Picture URL</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                    placeholder="https://example.com/photo.jpg"
+                                    value={formData.profilePicture}
+                                    onChange={(e) => setFormData({ ...formData, profilePicture: e.target.value })}
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <button type="submit" className="btn-primary gap-2">
+                                    <Save size={18} /> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Reset Password */}
+                    <div className="glass p-8">
+                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                            <Lock size={20} className="text-primary" /> Security & Password
+                        </h3>
+                        <form onSubmit={handleUpdatePassword} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-text-muted">Current Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                        required
+                                        value={passwords.currentPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                                    />
+                                </div>
+                                <div className="hidden md:block"></div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-text-muted">New Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                        required
+                                        value={passwords.newPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-text-muted">Confirm New Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                        required
+                                        value={passwords.confirmPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <button type="submit" className="btn-primary gap-2">
+                                <Lock size={18} /> Update Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Profile;
