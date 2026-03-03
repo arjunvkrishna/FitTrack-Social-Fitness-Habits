@@ -24,8 +24,6 @@ services:
       - JWT_SECRET=your_docker_secret_key
     networks:
       - fittrack-network
-    depends_on:
-      - mongodb
     deploy:
       replicas: 1
       restart_policy:
@@ -37,8 +35,6 @@ services:
       - "3000:80"
     networks:
       - fittrack-network
-    depends_on:
-      - backend
     deploy:
       replicas: 1
       restart_policy:
