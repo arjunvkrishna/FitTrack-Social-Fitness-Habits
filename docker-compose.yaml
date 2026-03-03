@@ -9,7 +9,7 @@ services:
     volumes:
       - mongo-data:/data/db
 
-  backend:
+  fittrack-backend:
     build: ./backend
     image: arjunvk/backend:v1.0.0
     container_name: fittrack-backend
@@ -29,7 +29,7 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      - fittrack-backend
 
 volumes:
   mongo-data:

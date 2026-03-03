@@ -14,7 +14,7 @@ services:
       restart_policy:
         condition: on-failure
 
-  backend:
+  fittrack-backend:
     image: arjunvk/backend:v1.0.0
     ports:
       - "5000:5000"
