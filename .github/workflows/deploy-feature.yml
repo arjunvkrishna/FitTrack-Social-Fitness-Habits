@@ -1,0 +1,39 @@
+name: Deploy Feature Branch
+
+on:
+  push:
+    branches:
+      - feature/**   # triggers on any feature branch
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # runner is on your server
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Show branch
+        run: echo "Deploying branch ${{ github.ref_name }}"
+
+      # Optional: build image locally
+      - name: Build Docker Image
+        run: |
+          docker build -t my-service:${{ github.ref_name }} .
+
+      # Stop and remove existing stack/container
+      - name: Remove Existing Stack
+        run: |
+          docker compose down || true
+          # OR if using docker swarm:
+          # docker stack rm my-stack || true
+
+      # Redeploy
+      - name: Redeploy Stack
+        run: |
+          docker compose up -d --build
+          # OR if using swarm:
+          # docker stack deploy -c docker-compose.yml my-stack
+
+      - name: Cleanup Unused Images
+        run: docker image prune -f
