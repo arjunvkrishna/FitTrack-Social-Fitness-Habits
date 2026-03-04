@@ -1,0 +1,54 @@
+enum LogLevel {
+    TRACE = 0,
+    DEBUG = 1,
+    INFO = 2,
+    WARN = 3,
+    ERROR = 4,
+    OFF = 5
+}
+
+class Logger {
+    private level: LogLevel;
+
+    constructor() {
+        const envLevel = (process.env.LOG_LEVEL || 'INFO').toUpperCase();
+        this.level = LogLevel[envLevel as keyof typeof LogLevel] ?? LogLevel.INFO;
+    }
+
+    private formatMessage(level: string, message: string): string {
+        const timestamp = new Date().toISOString();
+        return `[${timestamp}] [${level}] ${message}`;
+    }
+
+    trace(message: string, ...args: any[]) {
+        if (this.level <= LogLevel.TRACE) {
+            console.log(this.formatMessage('TRACE', message), ...args);
+        }
+    }
+
+    debug(message: string, ...args: any[]) {
+        if (this.level <= LogLevel.DEBUG) {
+            console.log(this.formatMessage('DEBUG', message), ...args);
+        }
+    }
+
+    info(message: string, ...args: any[]) {
+        if (this.level <= LogLevel.INFO) {
+            console.log(this.formatMessage('INFO', message), ...args);
+        }
+    }
+
+    warn(message: string, ...args: any[]) {
+        if (this.level <= LogLevel.WARN) {
+            console.warn(this.formatMessage('WARN', message), ...args);
+        }
+    }
+
+    error(message: string, ...args: any[]) {
+        if (this.level <= LogLevel.ERROR) {
+            console.error(this.formatMessage('ERROR', message), ...args);
+        }
+    }
+}
+
+export const logger = new Logger();

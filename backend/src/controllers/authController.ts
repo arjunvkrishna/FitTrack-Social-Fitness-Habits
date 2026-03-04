@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import { logger } from '../utils/logger';
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -46,8 +47,8 @@ export const register = async (req: Request, res: Response) => {
                 gender: newUser.gender,
             },
         });
-    } catch (err) {
-        console.error('Registration error:', err);
+    } catch (err: any) {
+        logger.error('Registration error:', err);
         res.status(500).json({ message: 'Server error during registration' });
     }
 };
@@ -76,8 +77,8 @@ export const login = async (req: Request, res: Response) => {
                 gender: user.gender,
             },
         });
-    } catch (err) {
-        console.error('Login error:', err);
+    } catch (err: any) {
+        logger.error('Login error:', err);
         res.status(500).json({ message: 'Server error during login' });
     }
 };
@@ -112,6 +113,7 @@ export const setupAdmin = async (req: Request, res: Response) => {
         });
 
         await admin.save();
+        logger.info(`Admin setup complete for email: ${email}`);
 
         res.status(201).json({
             message: 'Admin setup successful',
@@ -123,8 +125,8 @@ export const setupAdmin = async (req: Request, res: Response) => {
                 role: admin.role
             }
         });
-    } catch (err) {
-        console.error('Admin setup error:', err);
+    } catch (err: any) {
+        logger.error('Admin setup error:', err);
         res.status(500).json({ message: 'Error during admin setup' });
     }
 };
