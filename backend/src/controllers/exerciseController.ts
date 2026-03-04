@@ -13,13 +13,8 @@ export const getExercises = async (req: Request, res: Response) => {
     }
 };
 
-export const createExercise = async (req: AuthRequest, res: Response) => {
+export const createExercise = async (req: Request, res: Response) => {
     try {
-        // Simple role check (assumes role is on req.user)
-        if (req.user?.role !== 'ADMIN') {
-            return res.status(403).json({ message: 'Admin access required' });
-        }
-
         const { name, category, instructions, targetMuscleGroup } = req.body;
 
         const existing = await Exercise.findOne({ name });
@@ -40,5 +35,39 @@ export const createExercise = async (req: AuthRequest, res: Response) => {
     } catch (err) {
         logger.error('Error creating exercise:', err);
         res.status(500).json({ message: 'Server error creating exercise' });
+    }
+};
+
+export const updateExercise = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const exercise = await Exercise.findByIdAndUpdate(id, updates, { new: true });
+        if (!exercise) {
+            return res.status(404).json({ message: 'Exercise not found' });
+        }
+
+        logger.info(`Admin updated exercise: ${exercise.name}`);
+        res.json(exercise);
+    } catch (err) {
+        logger.error('Error updating exercise:', err);
+        res.status(500).json({ message: 'Server error updating exercise' });
+    }
+};
+
+export const deleteExercise = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const exercise = await Exercise.findByIdAndDelete(id);
+        if (!exercise) {
+            return res.status(404).json({ message: 'Exercise not found' });
+        }
+
+        logger.info(`Admin deleted exercise: ${exercise.name}`);
+        res.json({ message: 'Exercise deleted successfully' });
+    } catch (err) {
+        logger.error('Error deleting exercise:', err);
+        res.status(500).json({ message: 'Server error deleting exercise' });
     }
 };

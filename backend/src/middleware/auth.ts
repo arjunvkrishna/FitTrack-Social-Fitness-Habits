@@ -20,6 +20,11 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
         }
+
+        if (!user.isActive) {
+            return res.status(403).json({ message: 'Account is disabled' });
+        }
+
         req.user = { id: userId, role: user.role };
         next();
     } catch (err) {

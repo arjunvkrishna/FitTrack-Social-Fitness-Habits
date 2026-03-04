@@ -80,3 +80,23 @@ export const getWorkoutHistory = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server error fetching workouts' });
     }
 };
+
+export const resetUserStats = async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findByIdAndUpdate(userId, {
+            $set: {
+                points: 0,
+                'streaks.water': 0,
+                'streaks.workout': 0,
+                'streaks.running': 0,
+                'streaks.overall': 0
+            }
+        }, { new: true });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json({ message: 'User stats reset successfully', user });
+    } catch (err) {
+        res.status(500).json({ message: 'Error resetting user stats' });
+    }
+};

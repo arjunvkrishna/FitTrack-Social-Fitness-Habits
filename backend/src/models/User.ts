@@ -24,6 +24,7 @@ export interface IUser extends Document {
     };
     lastActive: Date;
     gender?: 'MALE' | 'FEMALE' | 'OTHER';
+    isActive: boolean;
 }
 
 const UserSchema: Schema = new Schema({
@@ -50,6 +51,7 @@ const UserSchema: Schema = new Schema({
     },
     lastActive: { type: Date, default: Date.now },
     gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
+    isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

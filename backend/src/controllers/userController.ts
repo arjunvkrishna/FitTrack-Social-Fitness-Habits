@@ -133,3 +133,51 @@ export const getProfile = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error fetching profile' });
     }
 };
+
+// Admin Endpoints
+export const getAllUsers = async (req: AuthRequest, res: Response) => {
+    try {
+        const users = await User.find().select('-passwordHash');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+};
+
+export const updateUserStatus = async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId, isActive } = req.body;
+        const user = await User.findByIdAndUpdate(userId, { isActive }, { new: true }).select('-passwordHash');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating user status' });
+    }
+};
+
+export const adminResetPassword = async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId, newPassword } = req.body;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const salt = await bcrypt.genSalt(10);
+        user.passwordHash = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.json({ message: 'User password reset successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Error resetting user password' });
+    }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const user = await User.findByIdAndDelete(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Error deleting user' });
+    }
+};

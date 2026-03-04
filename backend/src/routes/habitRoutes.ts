@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { addWaterIntake, getWaterHistory, logWorkout, getWorkoutHistory } from '../controllers/habitController';
-import { authMiddleware } from '../middleware/auth';
+import { addWaterIntake, getWaterHistory, logWorkout, getWorkoutHistory, resetUserStats } from '../controllers/habitController';
+import { authMiddleware, adminMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -10,5 +10,8 @@ router.post('/water', addWaterIntake);
 router.get('/water', getWaterHistory);
 router.post('/workout', logWorkout);
 router.get('/workout', getWorkoutHistory);
+
+// Admin
+router.post('/admin/reset-stats', adminMiddleware, resetUserStats);
 
 export default router;

@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import CycleTracker from './pages/CycleTracker';
 import Profile from './pages/Profile';
 import Setup from './pages/Setup';
+import AdminDashboard from './pages/AdminDashboard';
 import { useAuth } from './context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -41,6 +42,7 @@ const AppContent = () => {
                     <Route path="/cycle" element={<CycleTracker />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/setup" element={<Setup />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                 </Routes>
             </main>
         </div>
