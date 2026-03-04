@@ -3,7 +3,6 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IExercise extends Document {
     name: string;
     category: 'STRENGTH' | 'CARDIO' | 'FLEXIBILITY' | 'OTHER';
-    instructions?: string;
     targetMuscleGroup?: string;
 }
 
@@ -15,7 +14,6 @@ const ExerciseSchema: Schema = new Schema({
         required: true,
         default: 'STRENGTH'
     },
-    instructions: { type: String },
     targetMuscleGroup: { type: String },
 }, { timestamps: true });
 

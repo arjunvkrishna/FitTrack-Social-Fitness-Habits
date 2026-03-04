@@ -159,44 +159,35 @@ const Dashboard = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm text-text-muted mb-2">Sets</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        placeholder="0"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary"
                                         value={workoutData.sets}
-                                        onChange={(e) => setWorkoutData({ ...workoutData, sets: parseInt(e.target.value) })}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, sets: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm text-text-muted mb-2">Reps</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        placeholder="0"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary"
                                         value={workoutData.reps}
-                                        onChange={(e) => setWorkoutData({ ...workoutData, reps: parseInt(e.target.value) })}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, reps: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm text-text-muted mb-2">Weight (kg)</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        placeholder="0"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary"
                                         value={workoutData.weight}
-                                        onChange={(e) => setWorkoutData({ ...workoutData, weight: parseInt(e.target.value) })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-text-muted mb-2">Duration (min)</label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
-                                        value={workoutData.duration}
-                                        onChange={(e) => setWorkoutData({ ...workoutData, duration: parseInt(e.target.value) })}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, weight: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
                             </div>

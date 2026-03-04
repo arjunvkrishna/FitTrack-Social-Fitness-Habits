@@ -27,7 +27,6 @@ interface Exercise {
     name: string;
     category: string;
     targetMuscleGroup: string;
-    instructions: string;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -43,8 +42,7 @@ const AdminDashboard: React.FC = () => {
     const [exerciseFormData, setExerciseFormData] = useState({
         name: '',
         category: 'Strength',
-        targetMuscleGroup: '',
-        instructions: ''
+        targetMuscleGroup: ''
     });
 
     useEffect(() => {
@@ -88,7 +86,7 @@ const AdminDashboard: React.FC = () => {
             }
             setIsExerciseModalOpen(false);
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '', instructions: '' });
+            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '' });
             fetchExercises();
         } catch (err) {
             alert('Error saving exercise');
@@ -113,12 +111,11 @@ const AdminDashboard: React.FC = () => {
             setExerciseFormData({
                 name: exercise.name,
                 category: exercise.category,
-                targetMuscleGroup: exercise.targetMuscleGroup,
-                instructions: exercise.instructions
+                targetMuscleGroup: exercise.targetMuscleGroup
             });
         } else {
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '', instructions: '' });
+            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '' });
         }
         setIsExerciseModalOpen(true);
     };
@@ -414,7 +411,6 @@ const AdminDashboard: React.FC = () => {
                                                 {ex.targetMuscleGroup}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-text-muted line-clamp-2">{ex.instructions}</p>
                                     </motion.div>
                                 ))}
                             </div>
@@ -485,16 +481,6 @@ const AdminDashboard: React.FC = () => {
                                             placeholder="e.g. Chest"
                                         />
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-muted mb-1">Instructions</label>
-                                    <textarea
-                                        rows={4}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary resize-none"
-                                        value={exerciseFormData.instructions}
-                                        onChange={e => setExerciseFormData({ ...exerciseFormData, instructions: e.target.value })}
-                                        placeholder="How to perform this exercise..."
-                                    />
                                 </div>
                                 <div className="flex gap-4 mt-8">
                                     <button

@@ -15,7 +15,7 @@ export const getExercises = async (req: Request, res: Response) => {
 
 export const createExercise = async (req: Request, res: Response) => {
     try {
-        const { name, category, instructions, targetMuscleGroup } = req.body;
+        const { name, category, targetMuscleGroup } = req.body;
 
         const existing = await Exercise.findOne({ name });
         if (existing) {
@@ -25,7 +25,6 @@ export const createExercise = async (req: Request, res: Response) => {
         const exercise = new Exercise({
             name,
             category,
-            instructions,
             targetMuscleGroup
         });
 
