@@ -13,7 +13,7 @@ import { useAuth } from './context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const AppContent = () => {
-    const { checkSetupRequired, loading } = useAuth();
+    const { user, checkSetupRequired, loading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -36,7 +36,7 @@ const AppContent = () => {
             <Navbar />
             <main className="container mx-auto px-4 py-8">
                 <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={user?.role === 'ADMIN' ? <AdminDashboard /> : <Dashboard />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/cycle" element={<CycleTracker />} />
