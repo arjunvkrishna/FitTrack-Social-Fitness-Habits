@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Droplets, Flame, Calendar, Trophy, Plus, CheckCircle2, Search, User as UserIcon } from 'lucide-react';
@@ -31,7 +31,66 @@ const Dashboard = () => {
     const { user } = useAuth();
     const [water, setWater] = useState(1200);
     const [searchResults, setSearchResults] = useState([]);
+    const [exercises, setExercises] = useState<any[]>([]);
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const [workoutData, setWorkoutData] = useState({
+        exerciseId: '',
+        type: 'GYM' as 'GYM' | 'RUNNING' | 'CUSTOM',
+        sets: 0,
+        reps: 0,
+        weight: 0,
+        duration: 30
+    });
+
     const goal = 3000;
+
+    useEffect(() => {
+        fetchExercises();
+    }, []);
+
+    const fetchExercises = async () => {
+        try {
+            const res = await axios.get('/api/exercises');
+            setExercises(res.data);
+        } catch (err) {
+            console.error('Error fetching exercises', err);
+        }
+    };
+
+    const handleLogWorkout = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const selectedExercise = exercises.find(ex => ex._id === workoutData.exerciseId);
+            const data = {
+                ...workoutData,
+                activityName: selectedExercise?.name || 'Workout'
+            };
+            await axios.post('/api/habits/workout', data);
+            setShowLogModal(false);
+            alert('Workout logged successfully!');
+        } catch (err) {
+            console.error('Error logging workout', err);
+            alert('Failed to log workout');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleShareProgress = async () => {
+        try {
+            const content = prompt("What's on your mind? Share your progress!");
+            if (!content) return;
+
+            await axios.post('/api/social/post', { content });
+            alert('Progress shared successfully!');
+        } catch (err) {
+            console.error('Error sharing progress', err);
+            alert('Failed to share progress');
+        }
+    };
 
     const chartData = {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -58,16 +117,110 @@ const Dashboard = () => {
                     <p className="text-text-muted mb-6">You're on a <span className="text-accent font-bold">5 day streak</span>. Keep it up!</p>
 
                     <div className="flex gap-4">
-                        <button className="btn-primary flex items-center gap-2">
+                        <button
+                            onClick={() => setShowLogModal(true)}
+                            className="btn-primary flex items-center gap-2"
+                        >
                             <Plus size={20} /> Log Workout
                         </button>
-                        <button className="bg-surface-border hover:bg-white/10 transition-colors px-6 py-3 rounded-xl font-semibold">
+                        <button
+                            onClick={handleShareProgress}
+                            className="bg-surface-border hover:bg-white/10 transition-colors px-6 py-3 rounded-xl font-semibold"
+                        >
                             Share Progress
                         </button>
                     </div>
                 </div>
                 <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-primary/20 blur-[100px] rounded-full"></div>
             </div>
+
+            {/* Workout Log Modal */}
+            {showLogModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="glass w-full max-w-lg p-8 relative"
+                    >
+                        <h2 className="text-2xl font-bold mb-6">Log Workout</h2>
+                        <form onSubmit={handleLogWorkout} className="space-y-4">
+                            <div>
+                                <label className="block text-sm text-text-muted mb-2">Select Exercise</label>
+                                <select
+                                    required
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary"
+                                    value={workoutData.exerciseId}
+                                    onChange={(e) => setWorkoutData({ ...workoutData, exerciseId: e.target.value })}
+                                >
+                                    <option value="" disabled>Choose an exercise...</option>
+                                    {exercises.map(ex => (
+                                        <option key={ex._id} value={ex._id}>{ex.name} ({ex.category})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-text-muted mb-2">Sets</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        value={workoutData.sets}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, sets: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-text-muted mb-2">Reps</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        value={workoutData.reps}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, reps: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-text-muted mb-2">Weight (kg)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        value={workoutData.weight}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, weight: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-text-muted mb-2">Duration (min)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                                        value={workoutData.duration}
+                                        onChange={(e) => setWorkoutData({ ...workoutData, duration: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 mt-8">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLogModal(false)}
+                                    className="flex-1 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 btn-primary"
+                                >
+                                    {loading ? 'Saving...' : 'Save Workout'}
+                                </button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
 
             {/* Stats Summary */}
             <div className="glass p-6 flex flex-col justify-between">

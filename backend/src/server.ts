@@ -8,6 +8,7 @@ import { logger } from './utils/logger';
 import habitRoutes from './routes/habitRoutes';
 import cycleRoutes from './routes/cycleRoutes';
 import socialRoutes from './routes/socialRoutes';
+import exerciseRoutes from './routes/exerciseRoutes';
 import bucketListRoutes from './routes/bucketListRoutes';
 import userRoutes from './routes/userRoutes';
 
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/cycle', cycleRoutes);
 app.use('/api/social', socialRoutes);
+app.use('/api/exercises', exerciseRoutes);
 app.use('/api/bucketlist', bucketListRoutes);
 app.use('/api/users', userRoutes);
 

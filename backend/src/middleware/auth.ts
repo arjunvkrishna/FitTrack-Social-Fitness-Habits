@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import User from '../models/User';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
     };
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const userId = req.header('X-User-ID');
 
     if (!userId) {
@@ -16,8 +16,11 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     try {
-        // In a "simple" auth, we just trust the ID passed or you could verify it exists in DB
-        req.user = { id: userId, role: 'USER' }; // Default to USER role for simplicity
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+        req.user = { id: userId, role: user.role };
         next();
     } catch (err) {
         res.status(401).json({ message: 'Invalid user ID' });

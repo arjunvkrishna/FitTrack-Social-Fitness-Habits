@@ -41,16 +41,20 @@ export const getWaterHistory = async (req: AuthRequest, res: Response) => {
 
 export const logWorkout = async (req: AuthRequest, res: Response) => {
     try {
-        const { type, activityName, duration, distance, caloriesBurned } = req.body;
+        const { type, activityName, duration, distance, caloriesBurned, exerciseId, sets, reps, weight } = req.body;
         const userId = req.user?.id;
 
         const workout = new Workout({
             userId,
+            exerciseId,
             type,
             activityName,
             duration,
             distance,
             caloriesBurned,
+            sets,
+            reps,
+            weight
         });
 
         await workout.save();
