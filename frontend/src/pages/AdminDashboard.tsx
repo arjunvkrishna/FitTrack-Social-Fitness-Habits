@@ -22,16 +22,34 @@ interface User {
     created_at: string;
 }
 
+interface Exercise {
+    _id: string;
+    name: string;
+    category: string;
+    targetMuscleGroup: string;
+    instructions: string;
+}
+
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
+    const [exercises, setExercises] = useState<Exercise[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'users' | 'exercises'>('users');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
+    const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+    const [exerciseFormData, setExerciseFormData] = useState({
+        name: '',
+        category: 'Strength',
+        targetMuscleGroup: '',
+        instructions: ''
+    });
 
     useEffect(() => {
         fetchUsers();
+        fetchExercises();
     }, []);
 
     const fetchUsers = async () => {
@@ -45,6 +63,64 @@ const AdminDashboard: React.FC = () => {
             console.error('Error fetching users:', err);
             setLoading(false);
         }
+    };
+
+    const fetchExercises = async () => {
+        try {
+            const res = await axios.get('/api/exercises');
+            setExercises(res.data);
+        } catch (err) {
+            console.error('Error fetching exercises:', err);
+        }
+    };
+
+    const handleSaveExercise = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingExercise) {
+                await axios.put(`/api/exercises/${editingExercise._id}`, exerciseFormData, {
+                    headers: { 'X-User-ID': user?.id }
+                });
+            } else {
+                await axios.post('/api/exercises', exerciseFormData, {
+                    headers: { 'X-User-ID': user?.id }
+                });
+            }
+            setIsExerciseModalOpen(false);
+            setEditingExercise(null);
+            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '', instructions: '' });
+            fetchExercises();
+        } catch (err) {
+            alert('Error saving exercise');
+        }
+    };
+
+    const handleDeleteExercise = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this exercise?')) return;
+        try {
+            await axios.delete(`/api/exercises/${id}`, {
+                headers: { 'X-User-ID': user?.id }
+            });
+            fetchExercises();
+        } catch (err) {
+            alert('Error deleting exercise');
+        }
+    };
+
+    const openExerciseModal = (exercise?: Exercise) => {
+        if (exercise) {
+            setEditingExercise(exercise);
+            setExerciseFormData({
+                name: exercise.name,
+                category: exercise.category,
+                targetMuscleGroup: exercise.targetMuscleGroup,
+                instructions: exercise.instructions
+            });
+        } else {
+            setEditingExercise(null);
+            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '', instructions: '' });
+        }
+        setIsExerciseModalOpen(true);
     };
 
     const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
@@ -113,6 +189,12 @@ const AdminDashboard: React.FC = () => {
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const filteredExercises = exercises.filter(ex =>
+        ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ex.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ex.targetMuscleGroup.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const stats = {
@@ -285,19 +367,155 @@ const AdminDashboard: React.FC = () => {
                             </tbody>
                         </table>
                     ) : (
-                        <div className="p-20 text-center text-text-muted flex flex-col items-center gap-4">
-                            <Database size={48} className="text-white/10" />
-                            <div>
-                                <h3 className="text-xl font-bold text-white mb-2">Exercise Catalog</h3>
-                                <p>Manage the list of exercises available for all users.</p>
-                                <button className="btn-primary mt-6 flex items-center gap-2 mx-auto">
-                                    <Plus size={18} /> Add New Exercise
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold">Exercise Library</h3>
+                                <button
+                                    onClick={() => openExerciseModal()}
+                                    className="px-4 py-2 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-105 transition-transform"
+                                >
+                                    <Plus size={18} /> Add Exercise
                                 </button>
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredExercises.map((ex) => (
+                                    <motion.div
+                                        key={ex._id}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="glass p-6 group relative"
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                                                <Activity size={24} />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => openExerciseModal(ex)}
+                                                    className="p-2 rounded-lg hover:bg-white/10 text-text-muted transition-colors"
+                                                >
+                                                    <Key size={16} /> {/* Using Key icon for edit placeholder */}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteExercise(ex._id)}
+                                                    className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 className="text-xl font-bold mb-1">{ex.name}</h4>
+                                        <div className="flex gap-2 mb-4">
+                                            <span className="text-[10px] uppercase tracking-wider font-bold bg-white/5 px-2 py-1 rounded-md text-text-muted">
+                                                {ex.category}
+                                            </span>
+                                            <span className="text-[10px] uppercase tracking-wider font-bold bg-primary/10 px-2 py-1 rounded-md text-primary">
+                                                {ex.targetMuscleGroup}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-text-muted line-clamp-2">{ex.instructions}</p>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {filteredExercises.length === 0 && (
+                                <div className="text-center py-20 text-text-muted">
+                                    <Database size={48} className="mx-auto mb-4 opacity-10" />
+                                    <p>No exercises found matching your search.</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Exercise Modal */}
+            <AnimatePresence>
+                {isExerciseModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="glass max-w-lg w-full p-8 overflow-hidden relative"
+                        >
+                            <h2 className="text-2xl font-bold mb-6">
+                                {editingExercise ? 'Edit Exercise' : 'Add New Exercise'}
+                            </h2>
+                            <form onSubmit={handleSaveExercise} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-text-muted mb-1">Exercise Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                        value={exerciseFormData.name}
+                                        onChange={e => setExerciseFormData({ ...exerciseFormData, name: e.target.value })}
+                                        placeholder="e.g. Bench Press"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
+                                        <select
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                            value={exerciseFormData.category}
+                                            onChange={e => setExerciseFormData({ ...exerciseFormData, category: e.target.value })}
+                                        >
+                                            <option value="Strength">Strength</option>
+                                            <option value="Cardio">Cardio</option>
+                                            <option value="Flexibility">Flexibility</option>
+                                            <option value="Endurance">Endurance</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-muted mb-1">Muscle Group</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                            value={exerciseFormData.targetMuscleGroup}
+                                            onChange={e => setExerciseFormData({ ...exerciseFormData, targetMuscleGroup: e.target.value })}
+                                            placeholder="e.g. Chest"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-text-muted mb-1">Instructions</label>
+                                    <textarea
+                                        rows={4}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary resize-none"
+                                        value={exerciseFormData.instructions}
+                                        onChange={e => setExerciseFormData({ ...exerciseFormData, instructions: e.target.value })}
+                                        placeholder="How to perform this exercise..."
+                                    />
+                                </div>
+                                <div className="flex gap-4 mt-8">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsExerciseModalOpen(false)}
+                                        className="flex-1 px-6 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-6 py-3 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    >
+                                        {editingExercise ? 'Save Changes' : 'Create Exercise'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
