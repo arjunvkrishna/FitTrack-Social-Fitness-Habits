@@ -28,6 +28,12 @@ jobs:
           echo "Waiting for stack to be removed..."
           sleep 15
 
+      - name: Removing unused images
+        run: |
+          docker image prune -f
+          echo "Waiting for images to be remove..."
+          sleep 15
+
       - name: Deploy New Stack
         run: |
           docker stack deploy -c docker-stack.yaml fittrack
