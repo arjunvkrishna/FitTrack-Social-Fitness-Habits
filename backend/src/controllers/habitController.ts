@@ -32,10 +32,69 @@ export const addWaterIntake = async (req: AuthRequest, res: Response) => {
 export const getWaterHistory = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.id;
-        const history = await WaterIntake.find({ userId }).sort({ date: -1 }).limit(30);
-        res.json(history);
+
+        // 1. Get today's detailed logs
+        // GST timezone calculation (same as healthController)
+        const date = new Date();
+        const options = { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
+        const parts = new Intl.DateTimeFormat('en-CA', options).formatToParts(date);
+        const year = parts.find(p => p.type === 'year')?.value || '1970';
+        const month = parts.find(p => p.type === 'month')?.value || '01';
+        const day = parts.find(p => p.type === 'day')?.value || '01';
+
+        const todayStartGST = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), -4, 0, 0, 0));
+        const tomorrowStartGST = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day) + 1, -4, 0, 0, 0));
+
+        const todayLogs = await WaterIntake.find({
+            userId,
+            date: { $gte: todayStartGST, $lt: tomorrowStartGST }
+        }).sort({ date: -1 });
+
+        // 2. Get past 30 days grouped
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const historyAgg = await WaterIntake.aggregate([
+            { $match: { userId: userId, date: { $gte: thirtyDaysAgo } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$date", timezone: "Asia/Dubai" } },
+                    total: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json({ todayLogs, history: historyAgg });
     } catch (err) {
         res.status(500).json({ message: 'Server error fetching history' });
+    }
+};
+
+export const editWaterIntake = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { amount } = req.body;
+        const intake = await WaterIntake.findOneAndUpdate(
+            { _id: id, userId: req.user?.id },
+            { amount },
+            { new: true }
+        );
+        if (!intake) return res.status(404).json({ message: 'Not found' });
+        res.json(intake);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error editing water' });
+    }
+};
+
+export const deleteWaterIntake = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const intake = await WaterIntake.findOneAndDelete({ _id: id, userId: req.user?.id });
+        if (!intake) return res.status(404).json({ message: 'Not found' });
+        res.json({ message: 'Deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error deleting water' });
     }
 };
 

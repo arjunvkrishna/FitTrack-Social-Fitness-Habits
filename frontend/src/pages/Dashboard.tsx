@@ -54,12 +54,30 @@ const Dashboard = () => {
     const [newSleep, setNewSleep] = useState<number | ''>('');
     const [newSteps, setNewSteps] = useState<number | ''>('');
 
+    // Hydration specific state
+    const [newWater, setNewWater] = useState<number | ''>('');
+    const [waterLogs, setWaterLogs] = useState<any[]>([]);
+    const [waterHistoryAgg, setWaterHistoryAgg] = useState<any[]>([]);
+
     const goal = user?.waterGoal || 3000;
 
     useEffect(() => {
         fetchExercises();
         fetchDailyHealth();
+        fetchWaterData();
     }, []);
+
+    const fetchWaterData = async () => {
+        try {
+            const res = await axios.get('/api/habits/water');
+            setWaterLogs(res.data.todayLogs || []);
+            setWaterHistoryAgg(res.data.history || []);
+            const todaySum = (res.data.todayLogs || []).reduce((acc: number, log: any) => acc + log.amount, 0);
+            setWater(todaySum);
+        } catch (err) {
+            console.error('Error fetching water', err);
+        }
+    };
 
     const fetchDailyHealth = async () => {
         try {
@@ -74,13 +92,38 @@ const Dashboard = () => {
         }
     };
 
-    const handleAddWater = async (amount: number) => {
+    const handleAddWater = async () => {
+        if (!newWater || newWater < 10 || newWater > 4000) {
+            alert('Please enter a valid amount between 10ml and 4000ml');
+            return;
+        }
         try {
-            await axios.post('/api/habits/water', { amount });
-            setWater(w => w + amount);
+            await axios.post('/api/habits/water', { amount: newWater });
+            setNewWater('');
+            fetchWaterData();
         } catch (err) {
             console.error('Error adding water', err);
             alert('Failed to log water intake.');
+        }
+    };
+
+    const handleEditWater = async (id: string, newAmount: number) => {
+        if (newAmount < 10 || newAmount > 4000) return alert('Please enter a valid amount between 10ml and 4000ml');
+        try {
+            await axios.put(`/api/habits/water/${id}`, { amount: newAmount });
+            fetchWaterData();
+        } catch (err) {
+            alert('Failed to edit water');
+        }
+    };
+
+    const handleDeleteWater = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this water log?')) return;
+        try {
+            await axios.delete(`/api/habits/water/${id}`);
+            fetchWaterData();
+        } catch (err) {
+            alert('Failed to delete water log');
         }
     };
 
@@ -150,6 +193,18 @@ const Dashboard = () => {
             fill: true,
             borderColor: 'rgb(139, 92, 246)',
             backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            tension: 0.4
+        }]
+    };
+
+    const waterChartData = {
+        labels: waterHistoryAgg.map(d => new Date(d._id).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
+        datasets: [{
+            label: 'Hydration (ml)',
+            data: waterHistoryAgg.map(d => d.total),
+            fill: true,
+            borderColor: '#60a5fa',
+            backgroundColor: 'rgba(96, 165, 250, 0.1)',
             tension: 0.4
         }]
     };
@@ -278,10 +333,29 @@ const Dashboard = () => {
                     <div className="h-2 bg-white/5 rounded-full mb-4 overflow-hidden">
                         <motion.div className="h-full bg-gradient-to-r from-blue-500 to-primary" style={{ width: `${Math.min(100, (water / goal) * 100)}%` }} />
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={() => handleAddWater(250)} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-sm transition-colors">+250ml</button>
-                        <button onClick={() => handleAddWater(500)} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-sm transition-colors">+500ml</button>
+                    <div className="flex gap-2 mb-4">
+                        <input type="number" min="10" max="4000" placeholder="Add ml" value={newWater} onChange={e => setNewWater(Number(e.target.value) || '')} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
+                        <button onClick={handleAddWater} className="bg-primary/20 hover:bg-primary/30 text-primary py-2 px-4 rounded-lg text-sm font-bold transition-colors">Add</button>
                     </div>
+
+                    {/* Today's Logs */}
+                    {waterLogs.length > 0 && (
+                        <div className="mt-4 space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                            <h4 className="text-xs text-text-muted font-bold uppercase mb-2">Today's Logs</h4>
+                            {waterLogs.map((log) => (
+                                <div key={log._id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg text-sm">
+                                    <span>{log.amount} ml <span className="text-xs text-text-muted ml-2">{new Date(log.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => {
+                                            const amt = prompt('Edit amount (ml):', log.amount.toString());
+                                            if (amt) handleEditWater(log._id, Number(amt));
+                                        }} className="text-blue-400 hover:text-blue-300 text-xs">Edit</button>
+                                        <button onClick={() => handleDeleteWater(log._id)} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Steps */}
@@ -332,6 +406,25 @@ const Dashboard = () => {
                         </div>
                         <button onClick={() => { if (foodData.name && foodData.calories) { handleUpdateHealth({ foodItem: foodData }); setFoodData({ name: '', calories: 0 }); } }} className="btn-primary py-1.5 text-sm font-bold mt-1">Add Food</button>
                     </div>
+                </div>
+            </div>
+
+            {/* Hydration History Chart */}
+            <div className="md:col-span-1 glass p-8">
+                <h3 className="text-xl font-bold mb-6">Hydration Track</h3>
+                <div className="h-[250px]">
+                    <Line
+                        data={waterChartData}
+                        options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                            }
+                        }}
+                    />
                 </div>
             </div>
 
