@@ -17,6 +17,7 @@ interface User {
         showStats: string;
     };
     streaks: any;
+    waterGoal?: number;
 }
 
 interface AuthContextType {

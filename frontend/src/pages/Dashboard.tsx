@@ -29,7 +29,7 @@ ChartJS.register(
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const [water, setWater] = useState(1200);
+    const [water, setWater] = useState(0);
     const [searchResults, setSearchResults] = useState([]);
     const [exercises, setExercises] = useState<any[]>([]);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -44,11 +44,35 @@ const Dashboard = () => {
         duration: 30
     });
 
-    const goal = 3000;
+    const goal = user?.waterGoal || 3000;
 
     useEffect(() => {
         fetchExercises();
+        fetchWaterIntake();
     }, []);
+
+    const fetchWaterIntake = async () => {
+        try {
+            const res = await axios.get('/api/habits/water');
+            const today = new Date().setHours(0, 0, 0, 0);
+            const todaysIntake = res.data
+                .filter((w: any) => new Date(w.date).setHours(0, 0, 0, 0) === today)
+                .reduce((sum: number, w: any) => sum + w.amount, 0);
+            setWater(todaysIntake);
+        } catch (err) {
+            console.error('Error fetching water intake', err);
+        }
+    };
+
+    const handleAddWater = async (amount: number) => {
+        try {
+            await axios.post('/api/habits/water', { amount });
+            setWater(w => w + amount);
+        } catch (err) {
+            console.error('Error adding water', err);
+            alert('Failed to log water intake.');
+        }
+    };
 
     const fetchExercises = async () => {
         try {
@@ -256,11 +280,11 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => setWater(w => w + 250)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
+                    <button onClick={() => handleAddWater(250)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
                         <span className="block text-xl font-bold">+250</span>
                         <span className="text-xs text-text-muted">Glass</span>
                     </button>
-                    <button onClick={() => setWater(w => w + 500)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
+                    <button onClick={() => handleAddWater(500)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
                         <span className="block text-xl font-bold">+500</span>
                         <span className="text-xs text-text-muted">Bottle</span>
                     </button>
