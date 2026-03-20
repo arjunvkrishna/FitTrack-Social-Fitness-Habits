@@ -11,6 +11,7 @@ import socialRoutes from './routes/socialRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
 import bucketListRoutes from './routes/bucketListRoutes';
 import userRoutes from './routes/userRoutes';
+import healthRoutes from './routes/healthRoutes';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/social', socialRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/bucketlist', bucketListRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/health', healthRoutes);
 
 import User from './models/User';
 import bcrypt from 'bcryptjs';

@@ -24,6 +24,9 @@ export interface IUser extends Document {
     };
     lastActive: Date;
     gender?: 'MALE' | 'FEMALE' | 'OTHER';
+    weight?: number;
+    height?: number;
+    age?: number;
     isActive: boolean;
 }
 
@@ -51,6 +54,9 @@ const UserSchema: Schema = new Schema({
     },
     lastActive: { type: Date, default: Date.now },
     gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
+    weight: { type: Number },
+    height: { type: Number },
+    age: { type: Number },
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

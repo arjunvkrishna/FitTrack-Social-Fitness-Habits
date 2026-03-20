@@ -1,11 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, AlertCircle, Info, ChevronRight, ChevronLeft, Droplets, Heart } from 'lucide-react';
-import { format, addDays, getDaysInMonth, startOfMonth, getDay } from 'date-fns';
+import { format, addDays, getDaysInMonth, startOfMonth, getDay, differenceInDays } from 'date-fns';
+import axios from 'axios';
 
 const CycleTracker = () => {
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const nextPeriod = addDays(new Date(), 14);
+    const [prediction, setPrediction] = useState<any>(null);
+    const [history, setHistory] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetchCycleData();
+    }, []);
+
+    const fetchCycleData = async () => {
+        try {
+            const predRes = await axios.get('/api/cycle/predictions');
+            setPrediction(predRes.data);
+            const histRes = await axios.get('/api/cycle/history');
+            setHistory(histRes.data);
+        } catch (err) {
+            console.error('Error fetching cycle data:', err);
+        }
+    };
+
+    const handleLogPeriodStart = async (date: Date = new Date()) => {
+        try {
+            await axios.post('/api/cycle', { startDate: format(date, 'yyyy-MM-dd') });
+            fetchCycleData();
+        } catch (err) {
+            console.error('Error logging period start:', err);
+        }
+    };
+
+    const nextPeriod = prediction?.nextPeriodStartDate ? new Date(prediction.nextPeriodStartDate) : null;
+    const daysUntil = nextPeriod ? differenceInDays(nextPeriod, new Date()) : '--';
 
     return (
         <motion.div
@@ -33,13 +61,13 @@ const CycleTracker = () => {
                     <div className="glass p-8 bg-gradient-to-br from-secondary/10 to-transparent">
                         <h3 className="text-text-muted font-medium mb-1">Next Cycle Starts In</h3>
                         <div className="flex items-baseline gap-2 mb-6">
-                            <span className="text-6xl font-black text-secondary">14</span>
+                            <span className="text-6xl font-black text-secondary">{daysUntil}</span>
                             <span className="text-xl font-bold">Days</span>
                         </div>
                         <div className="p-4 bg-white/5 rounded-2xl flex items-center gap-4 border border-white/10">
                             <Calendar className="text-secondary" />
                             <div>
-                                <p className="text-sm font-bold">{format(nextPeriod, 'MMMM d, yyyy')}</p>
+                                <p className="text-sm font-bold">{nextPeriod ? format(nextPeriod, 'MMMM d, yyyy') : '--'}</p>
                                 <p className="text-xs text-text-muted">Estimated Start Date</p>
                             </div>
                         </div>
@@ -93,7 +121,7 @@ const CycleTracker = () => {
 
                     <div className="mt-8 pt-8 border-t border-white/5 flex gap-8">
                         <div className="flex items-center gap-4">
-                            <button className="btn-primary px-8">Log Period Start</button>
+                            <button onClick={() => handleLogPeriodStart()} className="btn-primary px-8">Log Period Start</button>
                             <button className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5">
                                 <Droplets />
                             </button>

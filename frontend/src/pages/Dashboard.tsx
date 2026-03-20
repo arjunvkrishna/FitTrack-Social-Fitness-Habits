@@ -30,6 +30,11 @@ ChartJS.register(
 const Dashboard = () => {
     const { user } = useAuth();
     const [water, setWater] = useState(0);
+    const [steps, setSteps] = useState(0);
+    const [sleepHours, setSleepHours] = useState(0);
+    const [caloriesBurned, setCaloriesBurned] = useState(0);
+    const [caloriesConsumed, setCaloriesConsumed] = useState(0);
+
     const [searchResults, setSearchResults] = useState([]);
     const [exercises, setExercises] = useState<any[]>([]);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -41,26 +46,31 @@ const Dashboard = () => {
         sets: 0,
         reps: 0,
         weight: 0,
-        duration: 30
+        duration: 30,
+        caloriesBurned: 0
     });
+
+    const [foodData, setFoodData] = useState({ name: '', calories: 0 });
+    const [newSleep, setNewSleep] = useState<number | ''>('');
+    const [newSteps, setNewSteps] = useState<number | ''>('');
 
     const goal = user?.waterGoal || 3000;
 
     useEffect(() => {
         fetchExercises();
-        fetchWaterIntake();
+        fetchDailyHealth();
     }, []);
 
-    const fetchWaterIntake = async () => {
+    const fetchDailyHealth = async () => {
         try {
-            const res = await axios.get('/api/habits/water');
-            const today = new Date().setHours(0, 0, 0, 0);
-            const todaysIntake = res.data
-                .filter((w: any) => new Date(w.date).setHours(0, 0, 0, 0) === today)
-                .reduce((sum: number, w: any) => sum + w.amount, 0);
-            setWater(todaysIntake);
+            const res = await axios.get('/api/health/daily');
+            setWater(res.data.water || 0);
+            setSteps(res.data.steps || 0);
+            setSleepHours(res.data.sleepHours || 0);
+            setCaloriesBurned(res.data.caloriesBurned || 0);
+            setCaloriesConsumed(res.data.caloriesConsumed || 0);
         } catch (err) {
-            console.error('Error fetching water intake', err);
+            console.error('Error fetching daily health', err);
         }
     };
 
@@ -93,6 +103,10 @@ const Dashboard = () => {
                 activityName: selectedExercise?.name || 'Workout'
             };
             await axios.post('/api/habits/workout', data);
+
+            // Optimistically update calories burned
+            setCaloriesBurned(prev => prev + (workoutData.caloriesBurned || 0));
+
             setShowLogModal(false);
             alert('Workout logged successfully!');
         } catch (err) {
@@ -100,6 +114,18 @@ const Dashboard = () => {
             alert('Failed to log workout');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateHealth = async (payload: any) => {
+        try {
+            await axios.post('/api/health/daily', payload);
+            if (payload.steps !== undefined) setSteps(payload.steps);
+            if (payload.sleepHours !== undefined) setSleepHours(payload.sleepHours);
+            if (payload.foodItem) setCaloriesConsumed(prev => prev + payload.foodItem.calories);
+        } catch (err) {
+            console.error('Error updating health', err);
+            alert('Failed to update log');
         }
     };
 
@@ -237,57 +263,75 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* Stats Summary */}
-            <div className="glass p-6 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">Social Rank</h3>
-                    <Trophy className="text-yellow-400" size={24} />
-                </div>
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-text-muted">Personal Points</span>
-                        <span className="font-bold">{user?.points || 1240}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-text-muted">Friend Rank</span>
-                        <span className="font-bold text-accent">#3 / 12</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-text-muted">Monthly Status</span>
-                        <span className="font-bold text-secondary">Elite</span>
-                    </div>
-                </div>
-            </div>
+            {/* Daily Health Tracking Grid */}
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            {/* Water Tracking Card */}
-            <div className="glass p-8">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h3 className="text-xl font-bold mb-1">Hydration</h3>
-                        <p className="text-text-muted text-sm">{water}ml of {goal}ml</p>
+                {/* Hydration */}
+                <div className="glass p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 className="font-bold text-lg">Hydration</h3>
+                            <p className="text-sm text-text-muted">{water} / {goal} ml</p>
+                        </div>
+                        <Droplets className="text-blue-400" size={24} />
                     </div>
-                    <div className="p-3 bg-blue-500/20 rounded-2xl">
-                        <Droplets className="text-blue-400" size={28} />
+                    <div className="h-2 bg-white/5 rounded-full mb-4 overflow-hidden">
+                        <motion.div className="h-full bg-gradient-to-r from-blue-500 to-primary" style={{ width: `${Math.min(100, (water / goal) * 100)}%` }} />
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => handleAddWater(250)} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-sm transition-colors">+250ml</button>
+                        <button onClick={() => handleAddWater(500)} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-sm transition-colors">+500ml</button>
                     </div>
                 </div>
 
-                <div className="relative h-4 bg-white/5 rounded-full mb-8 overflow-hidden">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(water / goal) * 100}%` }}
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-primary"
-                    />
+                {/* Steps */}
+                <div className="glass p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 className="font-bold text-lg">Steps</h3>
+                            <p className="text-sm text-text-muted text-accent">{steps} steps total</p>
+                        </div>
+                        <CheckCircle2 className="text-green-400" size={24} />
+                    </div>
+                    <div className="flex gap-2 mt-8">
+                        <input type="number" placeholder="Add steps" value={newSteps} onChange={e => setNewSteps(Number(e.target.value) || '')} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
+                        <button onClick={() => { if (newSteps) { handleUpdateHealth({ steps: steps + Number(newSteps) }); setNewSteps(''); } }} className="btn-primary px-4 font-bold">+</button>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => handleAddWater(250)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
-                        <span className="block text-xl font-bold">+250</span>
-                        <span className="text-xs text-text-muted">Glass</span>
-                    </button>
-                    <button onClick={() => handleAddWater(500)} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl transition-all border border-white/5 text-center">
-                        <span className="block text-xl font-bold">+500</span>
-                        <span className="text-xs text-text-muted">Bottle</span>
-                    </button>
+                {/* Sleep */}
+                <div className="glass p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 className="font-bold text-lg">Sleep</h3>
+                            <p className="text-sm text-text-muted text-purple-300">{sleepHours} hrs total</p>
+                        </div>
+                        <Trophy className="text-purple-400" size={24} />
+                    </div>
+                    <div className="flex gap-2 mt-8">
+                        <input type="number" step="0.5" placeholder="Add hrs" value={newSleep} onChange={e => setNewSleep(Number(e.target.value) || '')} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
+                        <button onClick={() => { if (newSleep) { handleUpdateHealth({ sleepHours: sleepHours + Number(newSleep) }); setNewSleep(''); } }} className="btn-primary px-4 font-bold">+</button>
+                    </div>
+                </div>
+
+                {/* Calories */}
+                <div className="glass p-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Net Calories</h3>
+                        <Flame className="text-orange-400" size={24} />
+                    </div>
+                    <div className="text-2xl font-black mb-1 text-red-300">{caloriesConsumed - caloriesBurned} <span className="text-sm font-normal text-text-muted">kcal</span></div>
+                    <div className="flex justify-between text-xs text-text-muted mb-4">
+                        <span>In: {caloriesConsumed}</span>
+                        <span>Burned: {caloriesBurned}</span>
+                    </div>
+                    <div className="flex gap-2 flex-col">
+                        <div className="flex gap-2">
+                            <input type="text" placeholder="Food" value={foodData.name} onChange={e => setFoodData({ ...foodData, name: e.target.value })} className="w-3/5 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
+                            <input type="number" placeholder="kcal" value={foodData.calories || ''} onChange={e => setFoodData({ ...foodData, calories: parseInt(e.target.value) || 0 })} className="w-2/5 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
+                        </div>
+                        <button onClick={() => { if (foodData.name && foodData.calories) { handleUpdateHealth({ foodItem: foodData }); setFoodData({ name: '', calories: 0 }); } }} className="btn-primary py-1.5 text-sm font-bold mt-1">Add Food</button>
+                    </div>
                 </div>
             </div>
 
