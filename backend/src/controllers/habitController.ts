@@ -140,6 +140,42 @@ export const getWorkoutHistory = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const editWorkout = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        const { sets, reps, weight } = req.body;
+        
+        const workout = await Workout.findOneAndUpdate(
+            { _id: id, userId },
+            { $set: { sets, reps, weight } },
+            { new: true }
+        );
+        
+        if (!workout) {
+            return res.status(404).json({ message: 'Workout not found or unauthorized' });
+        }
+        res.json(workout);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error editing workout' });
+    }
+};
+
+export const deleteWorkout = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        
+        const workout = await Workout.findOneAndDelete({ _id: id, userId });
+        if (!workout) {
+            return res.status(404).json({ message: 'Workout not found or unauthorized' });
+        }
+        res.json({ message: 'Workout deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error deleting workout' });
+    }
+};
+
 export const resetUserStats = async (req: AuthRequest, res: Response) => {
     try {
         const { userId } = req.body;

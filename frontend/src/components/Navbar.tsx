@@ -26,6 +26,10 @@ const Navbar = () => {
                             <Calendar size={20} />
                             <span>Reports</span>
                         </Link>
+                        <Link to="/exercises" className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
+                            <Trophy size={20} />
+                            <span>Exercises</span>
+                        </Link>
                         {user.gender === 'FEMALE' && (
                             <Link to="/cycle" className="flex items-center gap-2 text-text-muted hover:text-secondary transition-colors">
                                 <Calendar size={20} />

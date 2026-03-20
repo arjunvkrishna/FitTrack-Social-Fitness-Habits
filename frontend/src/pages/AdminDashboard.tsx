@@ -41,7 +41,7 @@ const AdminDashboard: React.FC = () => {
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [exerciseFormData, setExerciseFormData] = useState({
         name: '',
-        category: 'Strength',
+        category: 'STRENGTH',
         targetMuscleGroup: ''
     });
 
@@ -86,7 +86,7 @@ const AdminDashboard: React.FC = () => {
             }
             setIsExerciseModalOpen(false);
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '' });
+            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '' });
             fetchExercises();
         } catch (err) {
             alert('Error saving exercise');
@@ -464,10 +464,10 @@ const AdminDashboard: React.FC = () => {
                                             value={exerciseFormData.category}
                                             onChange={e => setExerciseFormData({ ...exerciseFormData, category: e.target.value })}
                                         >
-                                            <option value="Strength">Strength</option>
-                                            <option value="Cardio">Cardio</option>
-                                            <option value="Flexibility">Flexibility</option>
-                                            <option value="Endurance">Endurance</option>
+                                            <option value="STRENGTH">Strength</option>
+                                            <option value="CARDIO">Cardio</option>
+                                            <option value="FLEXIBILITY">Flexibility</option>
+                                            <option value="OTHER">Other</option>
                                         </select>
                                     </div>
                                     <div>
