@@ -115,7 +115,7 @@ const AdminDashboard: React.FC = () => {
             });
         } else {
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'Strength', targetMuscleGroup: '' });
+            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '' });
         }
         setIsExerciseModalOpen(true);
     };

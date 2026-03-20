@@ -31,9 +31,12 @@ export const createExercise = async (req: Request, res: Response) => {
         await exercise.save();
         logger.info(`Admin created new exercise: ${name}`);
         res.status(201).json(exercise);
-    } catch (err) {
+    } catch (err: any) {
         logger.error('Error creating exercise:', err);
-        res.status(500).json({ message: 'Server error creating exercise' });
+        res.status(500).json({ 
+            message: err.message || 'Server error creating exercise',
+            error: err
+        });
     }
 };
 
