@@ -20,6 +20,9 @@ interface User {
     waterGoal?: number;
     telegramChatId?: string;
     reminderFrequency?: number;
+    dndEnabled?: boolean;
+    dndStart?: string;
+    dndEnd?: string;
 }
 
 interface AuthContextType {

@@ -6,7 +6,7 @@ import { AuthRequest } from '../middleware/auth';
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
-        const { name, username, gender, telegramChatId, reminderFrequency, privacySettings } = req.body;
+        const { name, username, gender, telegramChatId, reminderFrequency, dndEnabled, dndStart, dndEnd, privacySettings } = req.body;
         const userId = req.user?.id;
 
         if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -28,6 +28,9 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
                     gender,
                     telegramChatId,
                     reminderFrequency,
+                    dndEnabled,
+                    dndStart,
+                    dndEnd,
                     privacySettings: privacySettings
                 }
             },

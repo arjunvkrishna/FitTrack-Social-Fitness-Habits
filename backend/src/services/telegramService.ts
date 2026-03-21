@@ -3,6 +3,24 @@ import User from '../models/User';
 import SystemSettings from '../models/SystemSettings';
 import { logger } from '../utils/logger';
 
+function isCurrentTimeInWindow(start: string, end: string): boolean {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    const [startH, startM] = start.split(':').map(Number);
+    const startMinutes = (startH || 0) * 60 + (startM || 0);
+    
+    const [endH, endM] = end.split(':').map(Number);
+    const endMinutes = (endH || 0) * 60 + (endM || 0);
+    
+    if (startMinutes <= endMinutes) {
+        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    } else {
+        // Over midnight (e.g., 22:00 to 07:00)
+        return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+    }
+}
+
 export const initTelegramScheduler = () => {
     logger.info('Initializing Telegram water reminder scheduler...');
     
@@ -12,7 +30,7 @@ export const initTelegramScheduler = () => {
             const now = new Date();
             const hour = now.getHours();
 
-            // Only send between 7 AM and 10 PM
+            // Background operational hours: 7 AM to 10 PM
             if (hour >= 7 && hour <= 22) {
                 const botTokenSetting = await SystemSettings.findOne({ key: 'telegramBotToken' });
                 const botToken = botTokenSetting?.value;
@@ -29,6 +47,13 @@ export const initTelegramScheduler = () => {
 
                 for (const user of users) {
                     try {
+                        // Check DND status
+                        if (user.dndEnabled && user.dndStart && user.dndEnd) {
+                            if (isCurrentTimeInWindow(user.dndStart, user.dndEnd)) {
+                                continue; // Skip this user during DND
+                            }
+                        }
+
                         const frequencyMinutes = user.reminderFrequency || 60;
                         const lastSentTime = user.lastReminderSent ? new Date(user.lastReminderSent).getTime() : 0;
                         const nextReminderTime = lastSentTime + (frequencyMinutes * 60 * 1000);

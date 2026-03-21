@@ -11,7 +11,7 @@ services:
 
   fittrack-backend:
     build: ./backend
-    image: arjunvk/backend:v3.4.4
+    image: arjunvk/backend:v3.4.5
     container_name: fittrack-backend
     ports:
       - "5000:5000"
@@ -25,7 +25,7 @@ services:
 
   frontend:
     build: ./frontend
-    image: arjunvk/frontend:v3.4.4
+    image: arjunvk/frontend:v3.4.5
     container_name: fittrack-frontend
     ports:
       - "3000:80"

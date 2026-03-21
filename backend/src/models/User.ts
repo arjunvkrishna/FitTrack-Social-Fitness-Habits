@@ -31,6 +31,9 @@ export interface IUser extends Document {
     telegramChatId?: string;
     reminderFrequency: number; // in minutes
     lastReminderSent?: Date;
+    dndEnabled: boolean;
+    dndStart: string; // "HH:mm"
+    dndEnd: string; // "HH:mm"
 }
 
 const UserSchema: Schema = new Schema({
@@ -64,6 +67,9 @@ const UserSchema: Schema = new Schema({
     telegramChatId: { type: String },
     reminderFrequency: { type: Number, default: 60 },
     lastReminderSent: { type: Date },
+    dndEnabled: { type: Boolean, default: false },
+    dndStart: { type: String, default: '22:00' },
+    dndEnd: { type: String, default: '07:00' }
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

@@ -13,6 +13,9 @@ const Profile = () => {
         profilePicture: user?.profilePicture || '',
         telegramChatId: user?.telegramChatId || '',
         reminderFrequency: user?.reminderFrequency || 60,
+        dndEnabled: user?.dndEnabled || false,
+        dndStart: user?.dndStart || '22:00',
+        dndEnd: user?.dndEnd || '07:00',
         privacySettings: user?.privacySettings || {
             showProfilePicture: 'PUBLIC',
             showAchievements: 'PUBLIC',
@@ -29,6 +32,9 @@ const Profile = () => {
                 profilePicture: user.profilePicture || '',
                 telegramChatId: user.telegramChatId || '',
                 reminderFrequency: user.reminderFrequency || 60,
+                dndEnabled: user.dndEnabled || false,
+                dndStart: user.dndStart || '22:00',
+                dndEnd: user.dndEnd || '07:00',
                 privacySettings: user.privacySettings || {
                     showProfilePicture: 'PUBLIC',
                     showAchievements: 'PUBLIC',
@@ -224,6 +230,49 @@ const Profile = () => {
                                     <option value="90">1.5 Hours</option>
                                     <option value="120">2 Hours</option>
                                 </select>
+                            </div>
+                            <div className="space-y-4 md:col-span-2 p-4 rounded-xl bg-white/5 border border-white/10">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <label className="text-sm font-medium flex items-center gap-2">
+                                            <EyeOff size={14} className="text-primary" /> Do Not Disturb (DND) Mode
+                                        </label>
+                                        <p className="text-xs text-text-muted">Pause hydration reminders during specific hours.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, dndEnabled: !formData.dndEnabled })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.dndEnabled ? 'bg-primary' : 'bg-white/20'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.dndEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                                {formData.dndEnabled && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="grid grid-cols-2 gap-4 mt-4"
+                                    >
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-muted uppercase tracking-widest">DND Start Time</label>
+                                            <input
+                                                type="time"
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+                                                value={formData.dndStart}
+                                                onChange={(e) => setFormData({ ...formData, dndStart: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-text-muted uppercase tracking-widest">DND End Time</label>
+                                            <input
+                                                type="time"
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+                                                value={formData.dndEnd}
+                                                onChange={(e) => setFormData({ ...formData, dndEnd: e.target.value })}
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                             <div className="md:col-span-2">
                                 <button type="submit" className="btn-primary gap-2">

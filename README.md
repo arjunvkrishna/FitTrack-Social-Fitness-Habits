@@ -11,6 +11,7 @@ A comprehensive, premium health and fitness platform designed to track hydration
 - **Smart Editing**: Full control over today's logs (Edit/Delete).
 - **30-Day Analytics**: Visualize your hydration trends with dynamic line charts.
 - **Telegram Reminders**: Personalized alerts at your preferred frequency (15m to 2h) between 7 AM and 10 PM.
+- **Do Not Disturb (DND)**: Set custom quiet hours to pause notifications directly from your profile.
 
 ### 🏋️ Advanced Exercise Tracking
 - **Catalog Management**: Access a pre-built library of exercises across various categories (Strength, Cardio, Yoga, etc.).
@@ -89,6 +90,7 @@ A comprehensive, premium health and fitness platform designed to track hydration
 ---
 
 ## 📝 Version History
+- **v3.4.5**: Introduced Do Not Disturb (DND) mode for Telegram reminders.
 - **v3.4.4**: Fixed User Profile 401 errors and Telegram Chat ID persistence.
 - **v3.4.3**: Resolved Admin Dashboard race conditions and optimized auth headers.
 - **v3.4.2**: Refined Telegram reminder scheduling and Profile UI sync.
