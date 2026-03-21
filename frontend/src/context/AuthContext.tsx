@@ -19,6 +19,7 @@ interface User {
     streaks: any;
     waterGoal?: number;
     telegramChatId?: string;
+    reminderFrequency?: number;
 }
 
 interface AuthContextType {

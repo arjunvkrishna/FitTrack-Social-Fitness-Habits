@@ -12,6 +12,7 @@ const Profile = () => {
         gender: user?.gender || 'OTHER',
         profilePicture: user?.profilePicture || '',
         telegramChatId: user?.telegramChatId || '',
+        reminderFrequency: user?.reminderFrequency || 60,
         privacySettings: user?.privacySettings || {
             showProfilePicture: 'PUBLIC',
             showAchievements: 'PUBLIC',
@@ -184,6 +185,24 @@ const Profile = () => {
                                     <Info size={12} className="text-primary" />
                                     Don't know your ID? Send a message to <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-primary hover:underline">@userinfobot</a> on Telegram.
                                 </p>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-sm font-medium text-text-muted flex items-center gap-2">
+                                    <Send size={14} className="text-primary" /> Reminder Frequency (Minutes)
+                                </label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                    value={formData.reminderFrequency}
+                                    onChange={(e) => setFormData({ ...formData, reminderFrequency: parseInt(e.target.value) })}
+                                >
+                                    <option value="15">15 Minutes</option>
+                                    <option value="30">30 Minutes</option>
+                                    <option value="45">45 Minutes</option>
+                                    <option value="60">1 Hour</option>
+                                    <option value="120">2 Hours</option>
+                                    <option value="240">4 Hours</option>
+                                    <option value="480">8 Hours</option>
+                                </select>
                             </div>
                             <div className="md:col-span-2">
                                 <button type="submit" className="btn-primary gap-2">

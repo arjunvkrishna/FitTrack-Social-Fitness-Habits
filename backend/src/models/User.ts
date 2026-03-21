@@ -29,6 +29,8 @@ export interface IUser extends Document {
     age?: number;
     isActive: boolean;
     telegramChatId?: string;
+    reminderFrequency: number; // in minutes
+    lastReminderSent?: Date;
 }
 
 const UserSchema: Schema = new Schema({
@@ -60,6 +62,8 @@ const UserSchema: Schema = new Schema({
     age: { type: Number },
     isActive: { type: Boolean, default: true },
     telegramChatId: { type: String },
+    reminderFrequency: { type: Number, default: 60 },
+    lastReminderSent: { type: Date },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);
