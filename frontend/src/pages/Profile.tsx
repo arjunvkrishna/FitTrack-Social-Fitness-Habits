@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { User, Lock, Camera, Eye, Shield, Save, EyeOff } from 'lucide-react';
+import { User, Lock, Camera, Eye, Shield, Save, EyeOff, Send, Info } from 'lucide-react';
 
 const Profile = () => {
     const { user, login } = useAuth(); // We'll use a hack to update the user in context by re-fetching or just manual update
@@ -11,6 +11,7 @@ const Profile = () => {
         username: user?.username || '',
         gender: user?.gender || 'OTHER',
         profilePicture: user?.profilePicture || '',
+        telegramChatId: user?.telegramChatId || '',
         privacySettings: user?.privacySettings || {
             showProfilePicture: 'PUBLIC',
             showAchievements: 'PUBLIC',
@@ -165,6 +166,24 @@ const Profile = () => {
                                     value={formData.profilePicture}
                                     onChange={(e) => setFormData({ ...formData, profilePicture: e.target.value })}
                                 />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-sm font-medium text-text-muted flex items-center gap-2">
+                                    <Send size={14} className="text-primary" /> Telegram Chat ID (for Hydration Reminders)
+                                </label>
+                                <div className="flex gap-4">
+                                    <input
+                                        type="text"
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary font-mono"
+                                        placeholder="Enter your Telegram Chat ID (e.g. 123456789)"
+                                        value={formData.telegramChatId}
+                                        onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
+                                    />
+                                </div>
+                                <p className="text-xs text-text-muted flex items-center gap-1.5 mt-1">
+                                    <Info size={12} className="text-primary" />
+                                    Don't know your ID? Send a message to <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-primary hover:underline">@userinfobot</a> on Telegram.
+                                </p>
                             </div>
                             <div className="md:col-span-2">
                                 <button type="submit" className="btn-primary gap-2">

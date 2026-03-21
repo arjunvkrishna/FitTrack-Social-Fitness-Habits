@@ -50,6 +50,7 @@ const Exercises = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [workouts, setWorkouts] = useState<Workout[]>([]);
     const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
+    const [chartMetric, setChartMetric] = useState<'weight' | 'reps' | 'sets'>('weight');
     const [loading, setLoading] = useState(true);
 
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
@@ -104,24 +105,30 @@ const Exercises = () => {
         return workouts
             .filter(w => w.exerciseId === selectedExerciseId)
             // Sort to oldest first for the chart (X-axis timeline)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            .sort((a: Workout, b: Workout) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [workouts, selectedExerciseId]);
 
     const chartData = useMemo(() => {
+        const metricLabels = {
+            weight: 'Weight (kg)',
+            reps: 'Reps',
+            sets: 'Sets'
+        };
+        
         return {
-            labels: filteredWorkouts.map(w => format(new Date(w.date), 'MMM d')),
+            labels: filteredWorkouts.map((w: Workout) => format(new Date(w.date), 'MMM d')),
             datasets: [
                 {
-                    label: 'Weight (kg)',
-                    data: filteredWorkouts.map(w => w.weight || 0),
-                    borderColor: '#EE2A7B',
-                    backgroundColor: 'rgba(238, 42, 123, 0.2)',
+                    label: metricLabels[chartMetric],
+                    data: filteredWorkouts.map((w: Workout) => w[chartMetric] || 0),
+                    borderColor: chartMetric === 'weight' ? '#EE2A7B' : chartMetric === 'reps' ? '#38EF7D' : '#F9D423',
+                    backgroundColor: chartMetric === 'weight' ? 'rgba(238, 42, 123, 0.2)' : chartMetric === 'reps' ? 'rgba(56, 239, 125, 0.2)' : 'rgba(249, 212, 35, 0.2)',
                     fill: true,
                     tension: 0.4
                 }
             ]
         };
-    }, [filteredWorkouts]);
+    }, [filteredWorkouts, chartMetric]);
 
     const chartOptions = {
         responsive: true,
@@ -175,7 +182,24 @@ const Exercises = () => {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Graph */}
                     <div className="glass p-6">
-                        <h2 className="text-xl font-bold mb-4">Progress Chart</h2>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <h2 className="text-xl font-bold">Progress Chart</h2>
+                            <div className="flex bg-white/5 p-1 rounded-xl">
+                                {(['weight', 'reps', 'sets'] as const).map((metric) => (
+                                    <button
+                                        key={metric}
+                                        onClick={() => setChartMetric(metric)}
+                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                                            chartMetric === metric 
+                                            ? 'bg-primary text-white shadow-lg' 
+                                            : 'text-text-muted hover:text-white'
+                                        }`}
+                                    >
+                                        {metric}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                         {filteredWorkouts.length > 0 ? (
                             <div className="h-64">
                                 <Line data={chartData} options={chartOptions} />

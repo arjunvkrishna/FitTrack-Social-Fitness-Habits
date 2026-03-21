@@ -5,7 +5,8 @@ import {
     Users, UserCheck, UserX, Shield, Search,
     MoreVertical, Trash2, Key, RefreshCcw,
     Plus, Activity, Database, AlertCircle,
-    Download, Upload, FileText, Info
+    Download, Upload, FileText, Info, Settings,
+    Send
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -36,10 +37,12 @@ const AdminDashboard: React.FC = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'users' | 'exercises'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'exercises' | 'settings'>('users');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+    const [botToken, setBotToken] = useState('');
+    const [savingSettings, setSavingSettings] = useState(false);
     const [exerciseFormData, setExerciseFormData] = useState({
         name: '',
         category: 'STRENGTH',
@@ -49,7 +52,32 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         fetchUsers();
         fetchExercises();
+        fetchBotToken();
     }, []);
+
+    const fetchBotToken = async () => {
+        try {
+            const res = await axios.get('/api/users/admin/telegram-token', {
+                headers: { 'X-User-ID': user?.id }
+            });
+            setBotToken(res.data.token);
+        } catch (err) {
+            console.error('Error fetching bot token:', err);
+        }
+    };
+
+    const handleSaveBotToken = async () => {
+        setSavingSettings(true);
+        try {
+            await axios.post('/api/users/admin/telegram-token', { token: botToken }, {
+                headers: { 'X-User-ID': user?.id }
+            });
+            alert('Bot token updated successfully');
+        } catch (err) {
+            alert('Error updating bot token');
+        }
+        setSavingSettings(false);
+    };
 
     const fetchUsers = async () => {
         try {
@@ -226,13 +254,13 @@ const AdminDashboard: React.FC = () => {
         setActionLoading(null);
     };
 
-    const filteredUsers = users.filter(u =>
+    const filteredUsers = users.filter((u: User) =>
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredExercises = exercises.filter(ex =>
+    const filteredExercises = exercises.filter((ex: Exercise) =>
         ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ex.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ex.targetMuscleGroup.toLowerCase().includes(searchQuery.toLowerCase())
@@ -240,8 +268,8 @@ const AdminDashboard: React.FC = () => {
 
     const stats = {
         total: users.length,
-        active: users.filter(u => u.isActive).length,
-        admins: users.filter(u => u.role === 'ADMIN').length,
+        active: users.filter((u: User) => u.isActive).length,
+        admins: users.filter((u: User) => u.role === 'ADMIN').length,
     };
 
     return (
@@ -303,6 +331,15 @@ const AdminDashboard: React.FC = () => {
                         >
                             <div className="flex items-center gap-2">
                                 <Activity size={18} /> Exercise Catalog
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('settings')}
+                            className={`px-6 py-2 rounded-xl font-semibold transition-all ${activeTab === 'settings' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-white/5'
+                                }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Settings size={18} /> System Settings
                             </div>
                         </button>
                     </div>
@@ -505,6 +542,55 @@ const AdminDashboard: React.FC = () => {
                                     <p>No exercises found matching your search.</p>
                                 </div>
                             )}
+                        </div>
+                    ) : (
+                        <div className="p-8">
+                            <div className="max-w-2xl">
+                                <header className="mb-8">
+                                    <h3 className="text-2xl font-bold flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                                            <Send size={20} />
+                                        </div>
+                                        Telegram Bot Integration
+                                    </h3>
+                                    <p className="text-text-muted mt-2">
+                                        Configuration for automated notifications and water intake reminders.
+                                    </p>
+                                </header>
+
+                                <div className="space-y-6">
+                                    <div className="glass p-6">
+                                        <label className="block text-sm font-medium text-text-muted mb-2">Bot API Token</label>
+                                        <div className="flex gap-4">
+                                            <input 
+                                                type="password" 
+                                                value={botToken}
+                                                onChange={(e) => setBotToken(e.target.value)}
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+                                                placeholder="723456789:AAE-Xxxxxxxx_xxxxxxxxxxxxx"
+                                            />
+                                            <button 
+                                                onClick={handleSaveBotToken}
+                                                disabled={savingSettings}
+                                                className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:scale-105 transition-all disabled:opacity-50"
+                                            >
+                                                {savingSettings ? 'Saving...' : 'Save Token'}
+                                            </button>
+                                        </div>
+                                        <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 flex gap-3 text-sm text-text-muted leading-relaxed">
+                                            <Info className="flex-shrink-0 text-primary" size={20} />
+                                            <div>
+                                                <p className="font-semibold text-text-main mb-1">How it works:</p>
+                                                <ul className="list-disc list-inside space-y-1">
+                                                    <li>Bot sends hydration reminders every 15 minutes.</li>
+                                                    <li>Reminder window: 07:00 AM to 10:00 PM.</li>
+                                                    <li>Only users who have entered their "Telegram Chat ID" in their profile will receive messages.</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -23,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 
 // Request logging middleware
-app.use((req, res, next) => {
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     logger.trace(`${req.method} ${req.path}`);
     next();
 });
@@ -47,16 +47,19 @@ mongoose.connect(MONGODB_URI)
     .then(() => {
         logger.info('Connected to MongoDB');
     })
-    .catch((err) => logger.error('MongoDB connection error:', err));
+    .catch((err: any) => logger.error('MongoDB connection error:', err));
 
 // Basic Route
-app.get('/', (req, res) => {
+app.get('/', (req: express.Request, res: express.Response) => {
     res.send('FitTrack API is running...');
 });
+
+import { initTelegramScheduler } from './services/telegramService';
 
 // Start Server
 app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
+    initTelegramScheduler();
 });
 
 export default app;

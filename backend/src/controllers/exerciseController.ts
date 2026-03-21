@@ -32,10 +32,10 @@ export const createExercise = async (req: Request, res: Response) => {
         logger.info(`Admin created new exercise: ${name}`);
         res.status(201).json(exercise);
     } catch (err: any) {
-        logger.error('Error creating exercise:', err);
+        logger.error('Error creating exercise:', { error: err.message, stack: err.stack, body: req.body });
         res.status(500).json({ 
             message: err.message || 'Server error creating exercise',
-            error: err
+            error: process.env.NODE_ENV === 'development' ? err : undefined
         });
     }
 };

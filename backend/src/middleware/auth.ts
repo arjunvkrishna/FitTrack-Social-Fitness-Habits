@@ -6,6 +6,9 @@ export interface AuthRequest extends Request {
         id: string;
         role: string;
     };
+    body: any; // Explicitly allowed for easier handling in controllers
+    params: any;
+    query: any;
 }
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {

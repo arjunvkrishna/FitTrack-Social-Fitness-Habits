@@ -28,6 +28,7 @@ export interface IUser extends Document {
     height?: number;
     age?: number;
     isActive: boolean;
+    telegramChatId?: string;
 }
 
 const UserSchema: Schema = new Schema({
@@ -58,6 +59,7 @@ const UserSchema: Schema = new Schema({
     height: { type: Number },
     age: { type: Number },
     isActive: { type: Boolean, default: true },
+    telegramChatId: { type: String },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/User';
+import SystemSettings from '../models/SystemSettings';
 import { AuthRequest } from '../middleware/auth';
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
@@ -98,7 +99,7 @@ export const searchUsers = async (req: Request, res: Response) => {
             .limit(10);
 
         // Filter results based on privacy settings (e.g., if showProfilePicture is PRIVATE, hide it)
-        const sanitizedUsers = users.map(user => {
+        const sanitizedUsers = users.map((user: any) => {
             const userObj = user.toObject() as any;
             if (user.privacySettings?.showProfilePicture === 'PRIVATE') {
                 delete userObj.profilePicture;
@@ -166,7 +167,7 @@ export const adminResetPassword = async (req: AuthRequest, res: Response) => {
         await user.save();
 
         res.json({ message: 'User password reset successfully' });
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({ message: 'Error resetting user password' });
     }
 };
@@ -177,7 +178,43 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
         const user = await User.findByIdAndDelete(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json({ message: 'User deleted successfully' });
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({ message: 'Error deleting user' });
+    }
+};
+
+export const getTelegramBotToken = async (req: AuthRequest, res: Response) => {
+    try {
+        const setting = await SystemSettings.findOne({ key: 'telegramBotToken' });
+        res.json({ token: setting?.value || '' });
+    } catch (err: any) {
+        res.status(500).json({ message: 'Error fetching bot token' });
+    }
+};
+
+export const updateTelegramBotToken = async (req: AuthRequest, res: Response) => {
+    try {
+        const { token } = req.body;
+        await SystemSettings.findOneAndUpdate(
+            { key: 'telegramBotToken' },
+            { value: token },
+            { upsert: true, new: true }
+        );
+        res.json({ message: 'Bot token updated successfully' });
+    } catch (err: any) {
+        res.status(500).json({ message: 'Error updating bot token' });
+    }
+};
+
+export const updateTelegramChatId = async (req: AuthRequest, res: Response) => {
+    try {
+        const { telegramChatId } = req.body;
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+        await User.findByIdAndUpdate(userId, { telegramChatId });
+        res.json({ message: 'Telegram Chat ID updated successfully' });
+    } catch (err: any) {
+        res.status(500).json({ message: 'Error updating Telegram Chat ID' });
     }
 };
