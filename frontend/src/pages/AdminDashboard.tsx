@@ -444,7 +444,7 @@ const AdminDashboard: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
-                    ) : (
+                    ) : activeTab === 'exercises' ? (
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                                 <div className="glass p-6">

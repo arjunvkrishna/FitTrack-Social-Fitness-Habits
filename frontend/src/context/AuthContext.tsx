@@ -18,6 +18,7 @@ interface User {
     };
     streaks: any;
     waterGoal?: number;
+    telegramChatId?: string;
 }
 
 interface AuthContextType {
