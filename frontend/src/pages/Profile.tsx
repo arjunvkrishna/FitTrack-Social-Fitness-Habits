@@ -49,7 +49,9 @@ const Profile = () => {
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await axios.put('/api/users/profile', formData);
+            const res = await axios.put('/api/users/profile', formData, {
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
+            });
             setStatus({ type: 'success', message: 'Profile updated successfully!' });
             // Update local storage and context could be done here if we had a proper 'updateUser' in AuthContext
             localStorage.setItem('user', JSON.stringify(res.data));
@@ -68,6 +70,8 @@ const Profile = () => {
             await axios.put('/api/users/password', {
                 currentPassword: passwords.currentPassword,
                 newPassword: passwords.newPassword
+            }, {
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             setStatus({ type: 'success', message: 'Password reset successfully!' });
             setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
