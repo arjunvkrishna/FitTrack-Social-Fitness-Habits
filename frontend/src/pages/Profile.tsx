@@ -20,6 +20,24 @@ const Profile = () => {
         }
     });
 
+    React.useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                username: user.username || '',
+                gender: (user.gender as any) || 'OTHER',
+                profilePicture: user.profilePicture || '',
+                telegramChatId: user.telegramChatId || '',
+                reminderFrequency: user.reminderFrequency || 60,
+                privacySettings: user.privacySettings || {
+                    showProfilePicture: 'PUBLIC',
+                    showAchievements: 'PUBLIC',
+                    showStats: 'PUBLIC'
+                }
+            });
+        }
+    }, [user]);
+
     const [passwords, setPasswords] = useState({
         currentPassword: '',
         newPassword: '',
@@ -199,9 +217,8 @@ const Profile = () => {
                                     <option value="30">30 Minutes</option>
                                     <option value="45">45 Minutes</option>
                                     <option value="60">1 Hour</option>
+                                    <option value="90">1.5 Hours</option>
                                     <option value="120">2 Hours</option>
-                                    <option value="240">4 Hours</option>
-                                    <option value="480">8 Hours</option>
                                 </select>
                             </div>
                             <div className="md:col-span-2">

@@ -281,7 +281,12 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div>
                         <h1 className="text-4xl font-bold">Admin Console</h1>
-                        <p className="text-text-muted">Manage system users and global configurations</p>
+                        <div className="flex items-center gap-2 text-text-muted">
+                            <p>Manage users, exercises and </p>
+                            <div className="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider">
+                                <Send size={12} /> Telegram Bot
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -339,7 +344,7 @@ const AdminDashboard: React.FC = () => {
                                 }`}
                         >
                             <div className="flex items-center gap-2">
-                                <Settings size={18} /> System Settings
+                                <Settings size={18} /> Settings & Telegram
                             </div>
                         </button>
                     </div>
