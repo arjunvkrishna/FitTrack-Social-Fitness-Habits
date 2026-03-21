@@ -73,3 +73,88 @@ export const deleteExercise = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server error deleting exercise' });
     }
 };
+
+export const exportExercises = async (req: Request, res: Response) => {
+    try {
+        const exercises = await Exercise.find().sort({ name: 1 });
+        let csv = 'Name,Category,Target Muscle Group\n';
+        
+        exercises.forEach((ex: any) => {
+            // Escape commas in names if any
+            const name = ex.name.includes(',') ? `"${ex.name}"` : ex.name;
+            const muscle = (ex.targetMuscleGroup || '').includes(',') ? `"${ex.targetMuscleGroup}"` : (ex.targetMuscleGroup || '');
+            csv += `${name},${ex.category},${muscle}\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=exercises.csv');
+        res.status(200).send(csv);
+    } catch (err) {
+        logger.error('Error exporting exercises:', err);
+        res.status(500).json({ message: 'Server error exporting exercises' });
+    }
+};
+
+export const importExercises = async (req: Request, res: Response) => {
+    try {
+        const csvData = req.body;
+        if (!csvData || typeof csvData !== 'string') {
+            return res.status(400).json({ message: 'No CSV data provided' });
+        }
+
+        const lines = csvData.split(/\r?\n/);
+        const results = { created: 0, updated: 0, errors: 0 };
+        const validCategories = ['STRENGTH', 'CARDIO', 'FLEXIBILITY', 'OTHER'];
+
+        // Skip header
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            // Simple CSV split (not handling escaped commas for now, but good enough for common use)
+            // A more robust regex for CSV split: /,(?=(?:(?:[^"]*"){2})*[^"]*$)/
+            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+            
+            if (parts.length < 2) {
+                results.errors++;
+                continue;
+            }
+
+            const [name, category, targetMuscleGroup] = parts;
+            const upperCategory = category.toUpperCase();
+
+            if (!validCategories.includes(upperCategory)) {
+                results.errors++;
+                continue;
+            }
+
+            try {
+                const existing = await Exercise.findOne({ name });
+                if (existing) {
+                    existing.category = upperCategory as any;
+                    existing.targetMuscleGroup = targetMuscleGroup || existing.targetMuscleGroup;
+                    await existing.save();
+                    results.updated++;
+                } else {
+                    const exercise = new Exercise({
+                        name,
+                        category: upperCategory,
+                        targetMuscleGroup
+                    });
+                    await exercise.save();
+                    results.created++;
+                }
+            } catch (err) {
+                results.errors++;
+            }
+        }
+
+        res.json({ 
+            message: `Import complete. Created: ${results.created}, Updated: ${results.updated}, Errors: ${results.errors}`,
+            results 
+        });
+    } catch (err) {
+        logger.error('Error importing exercises:', err);
+        res.status(500).json({ message: 'Server error importing exercises' });
+    }
+};

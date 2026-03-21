@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, UserCheck, UserX, Shield, Search,
     MoreVertical, Trash2, Key, RefreshCcw,
-    Plus, Activity, Database, AlertCircle
+    Plus, Activity, Database, AlertCircle,
+    Download, Upload, FileText, Info
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -103,6 +104,49 @@ const AdminDashboard: React.FC = () => {
         } catch (err) {
             alert('Error deleting exercise');
         }
+    };
+
+    const handleExportCSV = async () => {
+        try {
+            const response = await axios.get('/api/exercises/export', {
+                headers: { 'X-User-ID': user?.id },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'exercises.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            alert('Error exporting CSV');
+        }
+    };
+
+    const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const text = event.target?.result;
+            if (typeof text !== 'string') return;
+
+            try {
+                const response = await axios.post('/api/exercises/import', text, {
+                    headers: { 
+                        'X-User-ID': user?.id,
+                        'Content-Type': 'text/csv'
+                    }
+                });
+                alert(response.data.message);
+                fetchExercises();
+            } catch (err) {
+                alert('Error importing CSV');
+            }
+        };
+        reader.readAsText(file);
     };
 
     const openExerciseModal = (exercise?: Exercise) => {
@@ -290,7 +334,7 @@ const AdminDashboard: React.FC = () => {
                             <tbody className="divide-y divide-white/5">
                                 {loading ? (
                                     <tr><td colSpan={5} className="p-12 text-center text-text-muted">Loading user data...</td></tr>
-                                ) : filteredUsers.map((u) => (
+                                ) : filteredUsers.map((u: User) => (
                                     <tr key={u._id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-4">
                                             <div className="flex items-center gap-4">
@@ -365,6 +409,46 @@ const AdminDashboard: React.FC = () => {
                         </table>
                     ) : (
                         <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                <div className="glass p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-bold flex items-center gap-2">
+                                            <FileText className="text-primary" size={20} /> Bulk Actions
+                                        </h3>
+                                    </div>
+                                    <div className="flex flex-wrap gap-4">
+                                        <button 
+                                            onClick={handleExportCSV}
+                                            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-colors text-sm font-semibold"
+                                        >
+                                            <Download size={18} /> Export CSV
+                                        </button>
+                                        <label className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl transition-colors text-sm font-semibold cursor-pointer">
+                                            <Upload size={18} /> Import CSV
+                                            <input 
+                                                type="file" 
+                                                accept=".csv" 
+                                                className="hidden" 
+                                                onChange={handleImportCSV}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className="glass p-6">
+                                    <h3 className="font-bold flex items-center gap-2 mb-2">
+                                        <Info className="text-accent" size={20} /> CSV Format Example
+                                    </h3>
+                                    <p className="text-[10px] text-text-muted mb-2 font-medium">
+                                        Header required. Categories: STRENGTH, CARDIO, FLEXIBILITY, OTHER.
+                                    </p>
+                                    <code className="block bg-black/40 p-3 rounded-lg text-[11px] text-accent font-mono leading-relaxed border border-white/5">
+                                        Name,Category,Target Muscle Group<br/>
+                                        Push Ups,STRENGTH,Chest<br/>
+                                        Running,CARDIO,Legs
+                                    </code>
+                                </div>
+                            </div>
+
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold">Exercise Library</h3>
                                 <button
