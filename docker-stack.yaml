@@ -15,7 +15,7 @@ services:
         condition: on-failure
 
   fittrack-backend:
-    image: arjunvk/backend:v3.4.2
+    image: arjunvk/backend:v3.4.3
     ports:
       - "5000:5000"
     environment:
@@ -31,7 +31,7 @@ services:
         condition: on-failure
 
   frontend:
-    image: arjunvk/frontend:v3.4.2
+    image: arjunvk/frontend:v3.4.3
     ports:
       - "80:80"
     networks:

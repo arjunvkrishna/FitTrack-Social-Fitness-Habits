@@ -50,15 +50,17 @@ const AdminDashboard: React.FC = () => {
     });
 
     useEffect(() => {
-        fetchUsers();
-        fetchExercises();
-        fetchBotToken();
-    }, []);
+        if (user && user.id) {
+            fetchUsers();
+            fetchExercises();
+            fetchBotToken();
+        }
+    }, [user]);
 
     const fetchBotToken = async () => {
         try {
             const res = await axios.get('/api/users/admin/telegram-token', {
-                headers: { 'X-User-ID': user?.id }
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             setBotToken(res.data.token);
         } catch (err) {
@@ -70,7 +72,7 @@ const AdminDashboard: React.FC = () => {
         setSavingSettings(true);
         try {
             await axios.post('/api/users/admin/telegram-token', { token: botToken }, {
-                headers: { 'X-User-ID': user?.id }
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             alert('Bot token updated successfully');
         } catch (err) {
@@ -82,7 +84,7 @@ const AdminDashboard: React.FC = () => {
     const fetchUsers = async () => {
         try {
             const res = await axios.get('/api/users/admin/all', {
-                headers: { 'X-User-ID': user?.id }
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             setUsers(res.data);
             setLoading(false);

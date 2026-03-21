@@ -15,13 +15,17 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     const userId = req.header('X-User-ID');
 
     if (!userId) {
-        return res.status(401).json({ message: 'No user ID, authorization denied' });
+        return res.status(401).json({ message: 'Authentication required: X-User-ID header missing' });
     }
 
     try {
+        if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(401).json({ message: `Invalid user ID format: ${userId}` });
+        }
+
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(401).json({ message: 'User not found' });
+            return res.status(401).json({ message: 'User not found in database' });
         }
 
         if (!user.isActive) {
@@ -31,7 +35,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         req.user = { id: userId, role: user.role };
         next();
     } catch (err) {
-        res.status(401).json({ message: 'Invalid user ID' });
+        res.status(401).json({ message: 'Authentication failed' });
     }
 };
 
