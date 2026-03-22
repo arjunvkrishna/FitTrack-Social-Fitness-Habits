@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { sendFriendRequest, respondToRequest, getFriends, createPost, getFeed } from '../controllers/socialController';
-import { authMiddleware } from '../middleware/auth';
+import { getPosts, createPost, likePost, commentOnPost, deletePost } from '../controllers/socialController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/request', sendFriendRequest);
-router.post('/respond', respondToRequest);
-router.get('/friends', getFriends);
+router.get('/', getPosts);
 router.post('/post', createPost);
-router.get('/feed', getFeed);
+router.post('/:id/like', likePost);
+router.post('/:id/comment', commentOnPost);
+router.delete('/:id', deletePost);
 
 export default router;

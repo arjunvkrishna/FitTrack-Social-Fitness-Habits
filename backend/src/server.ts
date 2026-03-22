@@ -12,6 +12,7 @@ import exerciseRoutes from './routes/exerciseRoutes';
 import bucketListRoutes from './routes/bucketListRoutes';
 import userRoutes from './routes/userRoutes';
 import healthRoutes from './routes/healthRoutes';
+import workoutTemplateRoutes from './routes/workoutTemplateRoutes';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/exercises', exerciseRoutes);
 app.use('/api/bucketlist', bucketListRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/workout-templates', workoutTemplateRoutes);
 
 import User from './models/User';
 import bcrypt from 'bcryptjs';

@@ -23,6 +23,11 @@ interface User {
     dndEnabled?: boolean;
     dndStart?: string;
     dndEnd?: string;
+    restTimerSettings?: {
+        defaultDuration: number;
+        autoStart: boolean;
+        alertType: 'sound' | 'visual' | 'both';
+    };
 }
 
 interface AuthContextType {

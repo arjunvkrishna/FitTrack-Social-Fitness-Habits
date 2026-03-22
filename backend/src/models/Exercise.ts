@@ -15,6 +15,7 @@ const ExerciseSchema: Schema = new Schema({
         default: 'STRENGTH'
     },
     targetMuscleGroup: { type: String },
+    defaultRestTime: { type: Number, default: null }
 }, { timestamps: true });
 
 export default mongoose.model<IExercise>('Exercise', ExerciseSchema);

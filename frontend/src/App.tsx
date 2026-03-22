@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import RestTimer from './components/RestTimer';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -11,6 +12,9 @@ import Setup from './pages/Setup';
 import AdminDashboard from './pages/AdminDashboard';
 import Reports from './pages/Reports';
 import Exercises from './pages/Exercises';
+import Templates from './pages/Templates';
+import ActiveWorkout from './pages/ActiveWorkout';
+import Feed from './pages/Feed';
 import { useAuth } from './context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -45,10 +49,14 @@ const AppContent = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/exercises" element={<Exercises />} />
+                    <Route path="/templates" element={<Templates />} />
+                    <Route path="/active-workout/:templateId" element={<ActiveWorkout />} />
+                    <Route path="/feed" element={<Feed />} />
                     <Route path="/setup" element={<Setup />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                 </Routes>
             </main>
+            <RestTimer />
         </div>
     );
 };

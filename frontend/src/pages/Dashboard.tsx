@@ -145,13 +145,23 @@ const Dashboard = () => {
                 ...workoutData,
                 activityName: selectedExercise?.name || 'Workout'
             };
-            await axios.post('/api/habits/workout', data);
+            const res = await axios.post('/api/habits/workout', data);
+
+            // Trigger rest timer
+            const restDuration = selectedExercise?.defaultRestTime || user?.restTimerSettings?.defaultDuration || 90;
+            window.dispatchEvent(new CustomEvent('startRestTimer', {
+                detail: {
+                    duration: restDuration,
+                    exerciseName: selectedExercise?.name,
+                    autoStart: user?.restTimerSettings?.autoStart ?? true
+                }
+            }));
 
             // Optimistically update calories burned
             setCaloriesBurned(prev => prev + (workoutData.caloriesBurned || 0));
 
             setShowLogModal(false);
-            alert('Workout logged successfully!');
+            alert('Workout logged successfully! Rest timer started.');
         } catch (err) {
             console.error('Error logging workout', err);
             alert('Failed to log workout');

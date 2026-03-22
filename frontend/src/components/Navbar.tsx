@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Activity, Droplets, Trophy, User as UserIcon, LogOut, Calendar, Shield } from 'lucide-react';
+import { Activity, Droplets, Trophy, User as UserIcon, LogOut, Calendar, Shield, Users, Plus } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -29,6 +29,14 @@ const Navbar = () => {
                         <Link to="/exercises" className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
                             <Trophy size={20} />
                             <span>Exercises</span>
+                        </Link>
+                        <Link to="/templates" className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
+                            <Plus size={20} />
+                            <span>Templates</span>
+                        </Link>
+                        <Link to="/feed" className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
+                            <Users size={20} />
+                            <span>Feed</span>
                         </Link>
                         {user.gender === 'FEMALE' && (
                             <Link to="/cycle" className="flex items-center gap-2 text-text-muted hover:text-secondary transition-colors">

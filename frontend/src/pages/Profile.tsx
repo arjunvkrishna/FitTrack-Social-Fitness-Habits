@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { User, Lock, Camera, Eye, Shield, Save, EyeOff, Send, Info } from 'lucide-react';
+import { User, Lock, Camera, Eye, Shield, Save, EyeOff, Send, Info, Settings } from 'lucide-react';
 
 const Profile = () => {
     const { user, login } = useAuth(); // We'll use a hack to update the user in context by re-fetching or just manual update
@@ -20,6 +20,11 @@ const Profile = () => {
             showProfilePicture: 'PUBLIC',
             showAchievements: 'PUBLIC',
             showStats: 'PUBLIC'
+        },
+        restTimerSettings: user?.restTimerSettings || {
+            defaultDuration: 90,
+            autoStart: true,
+            alertType: 'both'
         }
     });
 
@@ -39,6 +44,11 @@ const Profile = () => {
                     showProfilePicture: 'PUBLIC',
                     showAchievements: 'PUBLIC',
                     showStats: 'PUBLIC'
+                },
+                restTimerSettings: user.restTimerSettings || {
+                    defaultDuration: 90,
+                    autoStart: true,
+                    alertType: 'both'
                 }
             });
         }
@@ -83,6 +93,18 @@ const Profile = () => {
             setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch (err: any) {
             setStatus({ type: 'error', message: err.response?.data?.message || 'Password reset failed' });
+        }
+    };
+
+    const handleTestTelegram = async () => {
+        if (!formData.telegramChatId) return setStatus({ type: 'error', message: 'Please enter a Chat ID first' });
+        try {
+            const res = await axios.post('/api/users/telegram/test', {}, {
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
+            });
+            setStatus({ type: 'success', message: res.data.message });
+        } catch (err: any) {
+            setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to send test notification' });
         }
     };
 
@@ -208,6 +230,13 @@ const Profile = () => {
                                         value={formData.telegramChatId}
                                         onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={handleTestTelegram}
+                                        className="btn-primary whitespace-nowrap px-4 py-2"
+                                    >
+                                        Send Test
+                                    </button>
                                 </div>
                                 <p className="text-xs text-text-muted flex items-center gap-1.5 mt-1">
                                     <Info size={12} className="text-primary" />
@@ -273,7 +302,67 @@ const Profile = () => {
                                         </div>
                                     </motion.div>
                                 )}
-                            </div>
+                                </div>
+
+                                {/* Rest Timer Settings */}
+                                <div className="space-y-4 md:col-span-2 p-6 rounded-xl bg-primary/10 border border-primary/20 mt-4">
+                                    <h4 className="font-bold flex items-center gap-2">
+                                        <Settings size={18} className="text-primary" /> Rest Timer Preferences
+                                    </h4>
+                                    
+                                    <div className="space-y-4 mt-4">
+                                        <div>
+                                            <div className="flex justify-between mb-2">
+                                                <label className="text-sm font-medium">Default Rest Duration</label>
+                                                <span className="text-primary font-bold">{formData.restTimerSettings.defaultDuration}s</span>
+                                            </div>
+                                            <input 
+                                                type="range" min="30" max="300" step="5"
+                                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                                                value={formData.restTimerSettings.defaultDuration}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    restTimerSettings: { ...formData.restTimerSettings, defaultDuration: parseInt(e.target.value) }
+                                                })}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium">Auto-start timer after logging</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({
+                                                    ...formData,
+                                                    restTimerSettings: { ...formData.restTimerSettings, autoStart: !formData.restTimerSettings.autoStart }
+                                                })}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.restTimerSettings.autoStart ? 'bg-primary' : 'bg-white/20'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.restTimerSettings.autoStart ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Alert Type</label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {['sound', 'visual', 'both'].map((type) => (
+                                                    <button
+                                                        key={type}
+                                                        type="button"
+                                                        onClick={() => setFormData({
+                                                            ...formData,
+                                                            restTimerSettings: { ...formData.restTimerSettings, alertType: type as any }
+                                                        })}
+                                                        className={`px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+                                                            formData.restTimerSettings.alertType === type ? 'bg-primary text-white' : 'bg-white/5 text-text-muted hover:bg-white/10'
+                                                        }`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             <div className="md:col-span-2">
                                 <button type="submit" className="btn-primary gap-2">
                                     <Save size={18} /> Save Changes

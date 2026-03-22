@@ -19,6 +19,7 @@ const router = express.Router();
 
 router.put('/profile', authMiddleware, updateProfile);
 router.put('/profile/telegram-chat-id', authMiddleware, updateTelegramChatId);
+router.post('/telegram/test', authMiddleware, testTelegramNotification);
 router.put('/password', authMiddleware, updatePassword);
 router.put('/profile-picture', authMiddleware, updateProfilePicture);
 router.get('/search', authMiddleware, searchUsers);

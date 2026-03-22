@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import bcrypt from 'bcryptjs';
 import User from '../models/User';
 import SystemSettings from '../models/SystemSettings';
@@ -6,7 +7,7 @@ import { AuthRequest } from '../middleware/auth';
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
-        const { name, username, gender, telegramChatId, reminderFrequency, dndEnabled, dndStart, dndEnd, privacySettings } = req.body;
+        const { name, username, gender, telegramChatId, reminderFrequency, dndEnabled, dndStart, dndEnd, restTimerSettings, privacySettings } = req.body;
         const userId = req.user?.id;
 
         if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -31,6 +32,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
                     dndEnabled,
                     dndStart,
                     dndEnd,
+                    restTimerSettings,
                     privacySettings: privacySettings
                 }
             },
@@ -221,5 +223,34 @@ export const updateTelegramChatId = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Telegram Chat ID updated successfully' });
     } catch (err: any) {
         res.status(500).json({ message: 'Error updating Telegram Chat ID' });
+    }
+};
+
+export const testTelegramNotification = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const user = await User.findById(userId);
+        if (!user || !user.telegramChatId) {
+            return res.status(400).json({ message: 'Telegram Chat ID not set' });
+        }
+
+        const setting = await SystemSettings.findOne({ key: 'telegramBotToken' });
+        const botToken = setting?.value;
+
+        if (!botToken) {
+            return res.status(500).json({ message: 'Telegram Bot Token not configured by admin' });
+        }
+
+        await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            chat_id: user.telegramChatId,
+            text: `🔔 Test Notification! Your FitTrack Telegram integration is working. Frequency: ${user.reminderFrequency}m. DND: ${user.dndEnabled ? 'ON' : 'OFF'}`
+        });
+
+        res.json({ message: 'Test notification sent! Check your Telegram.' });
+    } catch (err: any) {
+        console.error('Telegram test error:', err.response?.data || err.message);
+        res.status(500).json({ message: 'Failed to send test notification. Check your Chat ID and Bot Token.' });
     }
 };

@@ -29,6 +29,7 @@ interface Exercise {
     name: string;
     category: string;
     targetMuscleGroup: string;
+    defaultRestTime?: number;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -46,7 +47,8 @@ const AdminDashboard: React.FC = () => {
     const [exerciseFormData, setExerciseFormData] = useState({
         name: '',
         category: 'STRENGTH',
-        targetMuscleGroup: ''
+        targetMuscleGroup: '',
+        defaultRestTime: 90 as number | null
     });
 
     useEffect(() => {
@@ -185,11 +187,12 @@ const AdminDashboard: React.FC = () => {
             setExerciseFormData({
                 name: exercise.name,
                 category: exercise.category,
-                targetMuscleGroup: exercise.targetMuscleGroup
+                targetMuscleGroup: exercise.targetMuscleGroup,
+                defaultRestTime: exercise.defaultRestTime || null
             });
         } else {
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '' });
+            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '', defaultRestTime: null });
         }
         setIsExerciseModalOpen(true);
     };
@@ -538,6 +541,11 @@ const AdminDashboard: React.FC = () => {
                                             <span className="text-[10px] uppercase tracking-wider font-bold bg-primary/10 px-2 py-1 rounded-md text-primary">
                                                 {ex.targetMuscleGroup}
                                             </span>
+                                            {ex.defaultRestTime && (
+                                                <span className="text-[10px] uppercase tracking-wider font-bold bg-secondary/10 px-2 py-1 rounded-md text-secondary">
+                                                    Rest: {ex.defaultRestTime}s
+                                                </span>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -658,6 +666,16 @@ const AdminDashboard: React.FC = () => {
                                             placeholder="e.g. Chest"
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-text-muted mb-1">Default Rest Time (seconds)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary"
+                                        value={exerciseFormData.defaultRestTime || ''}
+                                        onChange={e => setExerciseFormData({ ...exerciseFormData, defaultRestTime: parseInt(e.target.value) || null })}
+                                        placeholder="e.g. 90 (optional)"
+                                    />
                                 </div>
                                 <div className="flex gap-4 mt-8">
                                     <button

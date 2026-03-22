@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Edit2, Trash2, Plus, Calendar } from 'lucide-react';
+import { Activity, Edit2, Trash2, Calendar } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import {
@@ -12,9 +12,11 @@ import {
     Title,
     Tooltip,
     Legend,
-    Filler
+    Filler,
+    RadarController,
+    RadialLinearScale
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Radar } from 'react-chartjs-2';
 
 ChartJS.register(
     CategoryScale,
@@ -24,7 +26,9 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    Filler
+    Filler,
+    RadarController,
+    RadialLinearScale
 );
 
 interface Exercise {
@@ -50,7 +54,7 @@ const Exercises = () => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [workouts, setWorkouts] = useState<Workout[]>([]);
     const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
-    const [chartMetric, setChartMetric] = useState<'weight' | 'reps' | 'sets'>('weight');
+    const [chartMetric, setChartMetric] = useState<'weight' | 'reps' | 'sets' | 'volume' | 'oneRM'>('weight');
     const [loading, setLoading] = useState(true);
 
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
@@ -104,25 +108,42 @@ const Exercises = () => {
     const filteredWorkouts = useMemo(() => {
         return workouts
             .filter(w => w.exerciseId === selectedExerciseId)
-            // Sort to oldest first for the chart (X-axis timeline)
-            .sort((a: Workout, b: Workout) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [workouts, selectedExerciseId]);
 
     const chartData = useMemo(() => {
         const metricLabels = {
-            weight: 'Weight (kg)',
-            reps: 'Reps',
-            sets: 'Sets'
+            weight: 'Max Weight (kg)',
+            reps: 'Total Reps',
+            sets: 'Total Sets',
+            volume: 'Total Volume (kg)',
+            oneRM: 'Estimated 1RM (kg)'
+        };
+
+        const calculateMetricValue = (w: Workout) => {
+            switch(chartMetric) {
+                case 'volume': return (w.sets || 0) * (w.reps || 0) * (w.weight || 0);
+                case 'oneRM': return (w.weight || 0) * (1 + (w.reps || 0) / 30);
+                default: return w[chartMetric as keyof Workout] || 0;
+            }
+        };
+
+        const colors = {
+            weight: { border: '#EE2A7B', bg: 'rgba(238, 42, 123, 0.2)' },
+            reps: { border: '#38EF7D', bg: 'rgba(56, 239, 125, 0.2)' },
+            sets: { border: '#F9D423', bg: 'rgba(249, 212, 35, 0.2)' },
+            volume: { border: '#00F2FE', bg: 'rgba(0, 242, 254, 0.2)' },
+            oneRM: { border: '#8A2BE2', bg: 'rgba(138, 43, 226, 0.2)' }
         };
         
         return {
-            labels: filteredWorkouts.map((w: Workout) => format(new Date(w.date), 'MMM d')),
+            labels: filteredWorkouts.map(w => format(new Date(w.date), 'MMM d')),
             datasets: [
                 {
                     label: metricLabels[chartMetric],
-                    data: filteredWorkouts.map((w: Workout) => w[chartMetric] || 0),
-                    borderColor: chartMetric === 'weight' ? '#EE2A7B' : chartMetric === 'reps' ? '#38EF7D' : '#F9D423',
-                    backgroundColor: chartMetric === 'weight' ? 'rgba(238, 42, 123, 0.2)' : chartMetric === 'reps' ? 'rgba(56, 239, 125, 0.2)' : 'rgba(249, 212, 35, 0.2)',
+                    data: filteredWorkouts.map(w => calculateMetricValue(w)),
+                    borderColor: colors[chartMetric].border,
+                    backgroundColor: colors[chartMetric].bg,
                     fill: true,
                     tension: 0.4
                 }
@@ -146,6 +167,47 @@ const Exercises = () => {
                 grid: { display: false },
                 ticks: { color: 'rgba(255,255,255,0.7)' }
             }
+        }
+    };
+
+    const radarData = useMemo(() => {
+        const muscleVolume: Record<string, number> = {};
+        workouts.forEach(w => {
+            const exercise = exercises.find(e => e._id === w.exerciseId);
+            if (exercise) {
+                const volume = (w.sets || 0) * (w.reps || 0) * (w.weight || 0);
+                muscleVolume[exercise.targetMuscleGroup] = (muscleVolume[exercise.targetMuscleGroup] || 0) + volume;
+            }
+        });
+
+        const labels = Object.keys(muscleVolume);
+        const data = Object.values(muscleVolume);
+
+        return {
+            labels,
+            datasets: [{
+                label: 'Volume per Muscle Group',
+                data,
+                backgroundColor: 'rgba(56, 239, 125, 0.2)',
+                borderColor: '#38EF7D',
+                pointBackgroundColor: '#38EF7D',
+                pointBorderColor: '#fff',
+                fill: true
+            }]
+        };
+    }, [workouts, exercises]);
+
+    const radarOptions = {
+        scales: {
+            r: {
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 12 } },
+                ticks: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: false }
         }
     };
 
@@ -177,6 +239,17 @@ const Exercises = () => {
                             <option key={ex._id} value={ex._id}>{ex.name} ({ex.category})</option>
                         ))}
                     </select>
+
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 mt-8">
+                        <Activity className="text-accent" /> Muscle Balance
+                    </h2>
+                    <div className="h-64 flex items-center justify-center">
+                        {workouts.length > 0 ? (
+                            <Radar data={radarData} options={radarOptions} />
+                        ) : (
+                            <p className="text-text-muted text-sm text-center">Log workouts to see your balance!</p>
+                        )}
+                    </div>
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
@@ -184,18 +257,18 @@ const Exercises = () => {
                     <div className="glass p-6">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <h2 className="text-xl font-bold">Progress Chart</h2>
-                            <div className="flex bg-white/5 p-1 rounded-xl">
-                                {(['weight', 'reps', 'sets'] as const).map((metric) => (
+                            <div className="flex bg-white/5 p-1 rounded-xl overflow-x-auto">
+                                {(['weight', 'reps', 'sets', 'volume', 'oneRM'] as const).map((metric) => (
                                     <button
                                         key={metric}
                                         onClick={() => setChartMetric(metric)}
-                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 ${
                                             chartMetric === metric 
                                             ? 'bg-primary text-white shadow-lg' 
                                             : 'text-text-muted hover:text-white'
                                         }`}
                                     >
-                                        {metric}
+                                        {metric === 'oneRM' ? '1RM' : metric}
                                     </button>
                                 ))}
                             </div>
@@ -216,39 +289,58 @@ const Exercises = () => {
                     <div className="glass p-6">
                         <h2 className="text-xl font-bold mb-4">Past Workouts</h2>
                         <div className="space-y-4">
-                            {/* Display newest first for the list view */}
-                            {[...filteredWorkouts].reverse().map(workout => (
-                                <div key={workout._id} className="bg-white/5 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="text-accent" />
-                                        <div>
-                                            <p className="font-semibold">{format(new Date(workout.date), 'MMMM d, yyyy h:mm a')}</p>
-                                            <p className="text-sm text-text-muted">
-                                                Sets: <span className="text-white font-bold">{workout.sets || 0}</span> | 
-                                                Reps: <span className="text-white font-bold">{workout.reps || 0}</span> | 
-                                                Weight: <span className="text-white font-bold">{workout.weight || 0}</span> kg
-                                            </p>
+                            {(() => {
+                                const list = [...filteredWorkouts].reverse();
+                                const chronHistory = [...filteredWorkouts];
+                                const prMap: Record<string, boolean> = {};
+                                let runningMax = 0;
+                                chronHistory.forEach(w => {
+                                    const current1RM = (w.weight || 0) * (1 + (w.reps || 0) / 30);
+                                    if (current1RM > runningMax) {
+                                        prMap[w._id] = true;
+                                        runningMax = current1RM;
+                                    }
+                                });
+
+                                return list.map(workout => (
+                                    <div key={workout._id} className={`bg-white/5 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 ${prMap[workout._id] ? 'border-primary' : 'border-transparent'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <Calendar className="text-accent" />
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-semibold">{format(new Date(workout.date), 'MMMM d, yyyy h:mm a')}</p>
+                                                    {prMap[workout._id] && (
+                                                        <span className="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">New PR!</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-text-muted">
+                                                    Sets: <span className="text-white font-bold">{workout.sets || 0}</span> | 
+                                                    Reps: <span className="text-white font-bold">{workout.reps || 0}</span> | 
+                                                    Weight: <span className="text-white font-bold">{workout.weight || 0}</span> kg |
+                                                    <span className="text-primary ml-1">1RM: {Math.round((workout.weight || 0) * (1 + (workout.reps || 0) / 30))} kg</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingWorkout(workout);
+                                                    setEditForm({ sets: workout.sets || 0, reps: workout.reps || 0, weight: workout.weight || 0 });
+                                                }}
+                                                className="p-2 bg-white/5 hover:bg-primary/20 text-primary rounded-xl transition-colors"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteWorkout(workout._id)}
+                                                className="p-2 bg-white/5 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => {
-                                                setEditingWorkout(workout);
-                                                setEditForm({ sets: workout.sets || 0, reps: workout.reps || 0, weight: workout.weight || 0 });
-                                            }}
-                                            className="p-2 bg-white/5 hover:bg-primary/20 text-primary rounded-xl transition-colors"
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteWorkout(workout._id)}
-                                            className="p-2 bg-white/5 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                ));
+                            })()}
                         </div>
                     </div>
                 </div>

@@ -1,122 +1,95 @@
-import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
-import FriendRequest from '../models/FriendRequest';
-import User from '../models/User';
-import Post from '../models/Post';
-import { logger } from '../utils/logger';
+import { Request, Response } from 'express';
+import Post, { IPost } from '../models/Post';
+import mongoose from 'mongoose';
 
-export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
+// Extended request to include userId from authMiddleware
+interface AuthRequest extends Request {
+    userId?: string;
+}
+
+export const getPosts = async (req: AuthRequest, res: Response) => {
     try {
-        const { receiverEmail } = req.body;
-        const senderId = req.user?.id;
-
-        const receiver = await User.findOne({ email: receiverEmail });
-        if (!receiver) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        if (receiver._id.toString() === senderId) {
-            return res.status(400).json({ message: 'Cannot friend yourself' });
-        }
-
-        const existingRequest = await FriendRequest.findOne({
-            senderId,
-            receiverId: receiver._id,
-            status: 'PENDING'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ message: 'Request already pending' });
-        }
-
-        const request = new FriendRequest({
-            senderId,
-            receiverId: receiver._id,
-        });
-
-        await request.save();
-        res.status(201).json(request);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error sending request' });
-    }
-};
-
-export const respondToRequest = async (req: AuthRequest, res: Response) => {
-    try {
-        const { requestId, status } = req.body; // status: 'ACCEPTED' or 'REJECTED'
-        const userId = req.user?.id;
-
-        const request = await FriendRequest.findById(requestId);
-        if (!request || request.receiverId.toString() !== userId) {
-            return res.status(404).json({ message: 'Request not found' });
-        }
-
-        request.status = status;
-        await request.save();
-
-        if (status === 'ACCEPTED') {
-            await User.findByIdAndUpdate(userId, { $addToSet: { friends: request.senderId } });
-            await User.findByIdAndUpdate(request.senderId, { $addToSet: { friends: userId } });
-        }
-
-        res.json({ message: `Request ${status.toLowerCase()}` });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error responding to request' });
-    }
-};
-
-export const getFriends = async (req: AuthRequest, res: Response) => {
-    try {
-        const userId = req.user?.id;
-        const user = await User.findById(userId).populate('friends', 'name email points streaks avatar');
-        res.json(user?.friends || []);
-    } catch (err) {
-        logger.error('Error fetching friends:', err);
-        res.status(500).json({ message: 'Server error fetching friends' });
+        const posts = await Post.find()
+            .populate('userId', 'name username profilePicture')
+            .populate('comments.userId', 'name username')
+            .sort({ createdAt: -1 });
+        res.json(posts);
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
     }
 };
 
 export const createPost = async (req: AuthRequest, res: Response) => {
+    const { content, workoutId } = req.body;
     try {
-        const { content, workoutId } = req.body;
-        const userId = req.user?.id;
-
-        const post = new Post({
-            userId,
+        const newPost = new Post({
+            userId: req.userId,
             content,
             workoutId
         });
-
-        await post.save();
-        logger.info(`User ${userId} shared progress: ${content.substring(0, 20)}...`);
-        res.status(201).json(post);
-    } catch (err) {
-        logger.error('Error creating post:', err);
-        res.status(500).json({ message: 'Server error creating post' });
+        await newPost.save();
+        const populatedPost = await Post.findById(newPost._id).populate('userId', 'name username profilePicture');
+        res.status(201).json(populatedPost);
+    } catch (err: any) {
+        res.status(400).json({ message: err.message });
     }
 };
 
-export const getFeed = async (req: AuthRequest, res: Response) => {
+export const likePost = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user?.id;
-        const user = await User.findById(userId);
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        const userIdObj = new mongoose.Types.ObjectId(req.userId);
+        const likeIndex = post.likes.indexOf(userIdObj);
+
+        if (likeIndex === -1) {
+            post.likes.push(userIdObj);
+        } else {
+            post.likes.splice(likeIndex, 1);
         }
 
-        const friendIds = user.friends;
-        const feedIds = [userId, ...friendIds];
+        await post.save();
+        res.json(post);
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
+    }
+};
 
-        const posts = await Post.find({ userId: { $in: feedIds } })
-            .populate('userId', 'name username avatar points')
-            .populate('workoutId')
-            .sort({ createdAt: -1 })
-            .limit(50);
+export const commentOnPost = async (req: AuthRequest, res: Response) => {
+    const { text } = req.body;
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
 
-        res.json(posts);
-    } catch (err) {
-        logger.error('Error fetching feed:', err);
-        res.status(500).json({ message: 'Server error fetching feed' });
+        post.comments.push({
+            userId: new mongoose.Types.ObjectId(req.userId),
+            text,
+            createdAt: new Date()
+        } as any);
+
+        await post.save();
+        const populatedPost = await Post.findById(post._id)
+            .populate('userId', 'name username profilePicture')
+            .populate('comments.userId', 'name username');
+        res.json(populatedPost);
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+export const deletePost = async (req: AuthRequest, res: Response) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.userId.toString() !== req.userId && req.userId !== 'admin') {
+            return res.status(403).json({ message: 'Unauthorized to delete this post' });
+        }
+
+        await post.deleteOne();
+        res.json({ message: 'Post deleted successfully' });
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
     }
 };

@@ -34,6 +34,15 @@ export interface IUser extends Document {
     dndEnabled: boolean;
     dndStart: string; // "HH:mm"
     dndEnd: string; // "HH:mm"
+    restTimerSettings: {
+        defaultDuration: number;
+        autoStart: boolean;
+        alertType: 'sound' | 'visual' | 'both';
+    };
+    cycleSettings: {
+        lutealPhaseLength: number; // default 14
+        typicalCycleLength: number; // default 28
+    };
 }
 
 const UserSchema: Schema = new Schema({
@@ -69,7 +78,16 @@ const UserSchema: Schema = new Schema({
     lastReminderSent: { type: Date },
     dndEnabled: { type: Boolean, default: false },
     dndStart: { type: String, default: '22:00' },
-    dndEnd: { type: String, default: '07:00' }
+    dndEnd: { type: String, default: '07:00' },
+    restTimerSettings: {
+        defaultDuration: { type: Number, default: 90 },
+        autoStart: { type: Boolean, default: true },
+        alertType: { type: String, enum: ['sound', 'visual', 'both'], default: 'both' }
+    },
+    cycleSettings: {
+        lutealPhaseLength: { type: Number, default: 14 },
+        typicalCycleLength: { type: Number, default: 28 }
+    }
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);
