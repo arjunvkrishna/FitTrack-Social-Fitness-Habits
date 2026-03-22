@@ -11,7 +11,8 @@ import {
     deleteUser,
     getTelegramBotToken,
     updateTelegramBotToken,
-    updateTelegramChatId
+    updateTelegramChatId,
+    testTelegramNotification
 } from '../controllers/userController';
 import { authMiddleware, adminMiddleware } from '../middleware/auth';
 
