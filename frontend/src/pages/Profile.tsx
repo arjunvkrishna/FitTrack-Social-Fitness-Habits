@@ -242,6 +242,10 @@ const Profile = () => {
                                     <Info size={12} className="text-primary" />
                                     Don't know your ID? Send a message to <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-primary hover:underline">@userinfobot</a> on Telegram.
                                 </p>
+                                <p className="text-xs text-text-muted flex items-center gap-1.5 mt-1">
+                                    <Info size={12} className="text-primary" />
+                                    To receive drinking water notifications, start a conversation with <a href="https://t.me/fittrack_2026_bot" target="_blank" rel="noreferrer" className="text-primary hover:underline">@fittrack_2026_bot</a>.
+                                </p>
                             </div>
                             <div className="space-y-2 md:col-span-2">
                                 <label className="text-sm font-medium text-text-muted flex items-center gap-2">
