@@ -6,20 +6,19 @@
 
 @layer base {
     body {
-        @apply bg-[#F4F5F7] text-slate-800 antialiased overflow-x-hidden;
+        @apply bg-slate-100 text-slate-800 antialiased overflow-x-hidden w-full h-full m-0 p-0;
         font-family: 'Outfit', sans-serif;
     }
     
-    /* Smooth scrolling for the whole app */
     html {
         scroll-behavior: smooth;
     }
 }
 
 @layer components {
-    /* The core Bento box card aesthetic */
     .bento-card {
-        @apply bg-white rounded-[2.5rem] p-6 lg:p-8 transition-all duration-[400ms] relative overflow-hidden;
+        @apply bg-white p-6 transition-all duration-500 relative overflow-hidden;
+        border-radius: 2.5rem;
         transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         box-shadow: 
             0 10px 40px -10px rgba(0, 0, 0, 0.04),
@@ -34,31 +33,28 @@
             0 0 2px 0 rgba(0, 0, 0, 0.02) inset;
     }
 
-    /* Core typography utilities */
     .text-gradient {
-        @apply bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 via-blue-500 to-cyan-400;
+        @apply bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 to-cyan-400;
     }
 
     .text-gradient-warm {
-        @apply bg-clip-text text-transparent bg-gradient-to-br from-rose-500 via-orange-400 to-amber-300;
+        @apply bg-clip-text text-transparent bg-gradient-to-br from-rose-500 to-amber-300;
     }
 
-    /* Standard Interactive Button */
     .btn-bento {
-        @apply bg-slate-900 text-white font-black tracking-wide py-4 px-8 rounded-3xl hover:bg-slate-800 active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3;
+        @apply bg-slate-900 text-white font-black tracking-wide py-4 px-8 rounded-full hover:bg-slate-800 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
     }
     
     .btn-bento-light {
-        @apply bg-[#F4F5F7] text-slate-700 font-bold py-3 px-6 rounded-2xl hover:bg-slate-200 active:scale-[0.97] transition-all;
+        @apply bg-slate-100 text-slate-700 font-bold py-3 px-6 rounded-full hover:bg-slate-200 active:scale-95 transition-all;
     }
 
-    /* Removing default scrollbar for sleekness */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
     .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 }
