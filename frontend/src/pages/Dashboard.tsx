@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Droplets, Flame, Calendar, Trophy, Plus, CheckCircle2, Search, User as UserIcon, Activity, Moon, X, ChevronRight, Apple } from 'lucide-react';
 import axios from 'axios';
+import WaterBowl from '../components/WaterBowl';
+import { AnimatedLogButton } from '../components/AnimatedLogButton';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -99,8 +101,8 @@ const Dashboard = () => {
         }
     };
 
-    const handleQuickLog = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleQuickLog = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setLoading(true);
         try {
             if (logType === 'WATER' && newWater) {
@@ -246,10 +248,7 @@ const Dashboard = () => {
 
                 {/* Core Metrics Grid */}
                 <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <MetricCard 
-                        title="Hydration" value={water} target={waterGoal} unit="ml" 
-                        icon={Droplets} gradientClass="bg-gradient-to-br from-blue-400 to-blue-600" 
-                    />
+                    <WaterBowl current={water} goal={waterGoal} unit="ml" />
                     <MetricCard 
                         title="Steps" value={steps} target={stepGoal} unit="steps" 
                         icon={CheckCircle2} gradientClass="bg-gradient-to-br from-green-400 to-emerald-600" 
@@ -512,9 +511,19 @@ const Dashboard = () => {
                                             </motion.div>
                                         </AnimatePresence>
 
-                                        <button type="submit" disabled={loading} className="w-full btn-primary py-4 text-lg">
-                                            {loading ? 'Saving...' : `Log ${logType.charAt(0) + logType.slice(1).toLowerCase()}`}
-                                        </button>
+                                        {/* Submit Action */}
+                                        {logType === 'WORKOUT' ? (
+                                            <AnimatedLogButton 
+                                                onComplete={() => handleQuickLog()} 
+                                                isSubmitting={loading} 
+                                                label="Hold to Log Workout" 
+                                                logType="WORKOUT" 
+                                            />
+                                        ) : (
+                                            <button type="submit" disabled={loading} className="w-full btn-primary py-4 text-lg">
+                                                {loading ? 'Saving...' : `Log ${logType.charAt(0) + logType.slice(1).toLowerCase()}`}
+                                            </button>
+                                        )}
                                     </form>
                                 </div>
                             )}

@@ -25,7 +25,7 @@ services:
 
   frontend:
     build: ./frontend
-    image: arjunvk/frontend:v3.4.9
+    image: arjunvk/frontend:v3.4.10
     container_name: fittrack-frontend
     ports:
       - "3000:80"
