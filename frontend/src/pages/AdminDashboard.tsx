@@ -111,11 +111,11 @@ const AdminDashboard: React.FC = () => {
         try {
             if (editingExercise) {
                 await axios.put(`/api/exercises/${editingExercise._id}`, exerciseFormData, {
-                    headers: { 'X-User-ID': user?.id }
+                    headers: { 'X-User-ID': user?.id || (user as any)?._id }
                 });
             } else {
                 await axios.post('/api/exercises', exerciseFormData, {
-                    headers: { 'X-User-ID': user?.id }
+                    headers: { 'X-User-ID': user?.id || (user as any)?._id }
                 });
             }
             setIsExerciseModalOpen(false);
@@ -131,7 +131,7 @@ const AdminDashboard: React.FC = () => {
         if (!confirm('Are you sure you want to delete this exercise?')) return;
         try {
             await axios.delete(`/api/exercises/${id}`, {
-                headers: { 'X-User-ID': user?.id }
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             fetchExercises();
         } catch (err) {
@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
     const handleExportCSV = async () => {
         try {
             const response = await axios.get('/api/exercises/export', {
-                headers: { 'X-User-ID': user?.id },
+                headers: { 'X-User-ID': user?.id || (user as any)?._id },
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -169,7 +169,7 @@ const AdminDashboard: React.FC = () => {
             try {
                 const response = await axios.post('/api/exercises/import', text, {
                     headers: { 
-                        'X-User-ID': user?.id,
+                        'X-User-ID': user?.id || (user as any)?._id,
                         'Content-Type': 'text/csv'
                     }
                 });
@@ -204,7 +204,7 @@ const AdminDashboard: React.FC = () => {
             await axios.put('/api/users/admin/status', {
                 userId,
                 isActive: !currentStatus
-            }, { headers: { 'X-User-ID': user?.id } });
+            }, { headers: { 'X-User-ID': user?.id || (user as any)?._id } });
             await fetchUsers();
         } catch (err) {
             alert('Error updating status');
@@ -221,7 +221,7 @@ const AdminDashboard: React.FC = () => {
             await axios.put('/api/users/admin/reset-password', {
                 userId,
                 newPassword
-            }, { headers: { 'X-User-ID': user?.id } });
+            }, { headers: { 'X-User-ID': user?.id || (user as any)?._id } });
             alert('Password reset successfully');
         } catch (err) {
             alert('Error resetting password');
@@ -236,7 +236,7 @@ const AdminDashboard: React.FC = () => {
         try {
             await axios.post('/api/habits/admin/reset-stats', {
                 userId
-            }, { headers: { 'X-User-ID': user?.id } });
+            }, { headers: { 'X-User-ID': user?.id || (user as any)?._id } });
             await fetchUsers();
             alert('Stats reset successfully');
         } catch (err) {
@@ -251,7 +251,7 @@ const AdminDashboard: React.FC = () => {
         setActionLoading(userId);
         try {
             await axios.delete(`/api/users/admin/${userId}`, {
-                headers: { 'X-User-ID': user?.id }
+                headers: { 'X-User-ID': user?.id || (user as any)?._id }
             });
             await fetchUsers();
         } catch (err) {

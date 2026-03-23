@@ -148,7 +148,7 @@ const Feed = () => {
                                         </p>
                                     </div>
                                 </div>
-                                {(user?.id === post.userId._id || user?.username === 'admin') && (
+                                {((user?.id || (user as any)?._id) === post.userId._id || user?.username === 'admin') && (
                                     <button onClick={() => handleDelete(post._id)} className="text-text-muted hover:text-red-400 transition-colors">
                                         <Trash2 size={18} />
                                     </button>
@@ -161,10 +161,10 @@ const Feed = () => {
                                 <button
                                     onClick={() => handleLike(post._id)}
                                     className={`flex items-center gap-2 transition-colors ${
-                                        post.likes.includes(user?.id || '') ? 'text-secondary' : 'text-text-muted hover:text-secondary'
+                                        post.likes.includes(user?.id || (user as any)?._id || '') ? 'text-secondary' : 'text-text-muted hover:text-secondary'
                                     }`}
                                 >
-                                    <Heart size={20} fill={post.likes.includes(user?.id || '') ? 'currentColor' : 'none'} />
+                                    <Heart size={20} fill={post.likes.includes(user?.id || (user as any)?._id || '') ? 'currentColor' : 'none'} />
                                     <span className="text-sm font-bold">{post.likes.length}</span>
                                 </button>
                                 <div className="flex items-center gap-2 text-text-muted">
