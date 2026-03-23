@@ -215,23 +215,37 @@ const Exercises = () => {
         return <div className="flex justify-center items-center h-64"><div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin"></div></div>;
     }
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    };
+
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
             className="max-w-6xl mx-auto space-y-6"
         >
-            <div className="flex items-center justify-between mb-8">
+            <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
                 <h1 className="text-4xl font-bold gradient-text">Exercise Progress</h1>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 glass p-6 h-fit">
+                <motion.div variants={itemVariants} className="lg:col-span-1 glass p-6 h-fit">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         <Activity className="text-primary" /> Select Exercise
                     </h2>
                     <select
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary mb-6"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary mb-6 transition-all"
                         value={selectedExerciseId}
                         onChange={(e) => setSelectedExerciseId(e.target.value)}
                     >
@@ -250,19 +264,19 @@ const Exercises = () => {
                             <p className="text-text-muted text-sm text-center">Log workouts to see your balance!</p>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 <div className="lg:col-span-2 space-y-6">
                     {/* Graph */}
-                    <div className="glass p-6">
+                    <motion.div variants={itemVariants} className="glass p-6">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <h2 className="text-xl font-bold">Progress Chart</h2>
-                            <div className="flex bg-white/5 p-1 rounded-xl overflow-x-auto">
+                            <div className="flex bg-white/5 p-1 rounded-full overflow-x-auto">
                                 {(['weight', 'reps', 'sets', 'volume', 'oneRM'] as const).map((metric) => (
                                     <button
                                         key={metric}
                                         onClick={() => setChartMetric(metric)}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 ${
+                                        className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all shrink-0 ${
                                             chartMetric === metric 
                                             ? 'bg-primary text-white shadow-lg' 
                                             : 'text-text-muted hover:text-white'
@@ -283,10 +297,10 @@ const Exercises = () => {
                                 <p>No logs found for this exercise.</p>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
 
                     {/* History */}
-                    <div className="glass p-6">
+                    <motion.div variants={itemVariants} className="glass p-6">
                         <h2 className="text-xl font-bold mb-4">Past Workouts</h2>
                         <div className="space-y-4">
                             {(() => {
@@ -303,14 +317,14 @@ const Exercises = () => {
                                 });
 
                                 return list.map(workout => (
-                                    <div key={workout._id} className={`bg-white/5 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 ${prMap[workout._id] ? 'border-primary' : 'border-transparent'}`}>
+                                    <div key={workout._id} className={`bg-white/5 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 transition-colors hover:bg-white/10 ${prMap[workout._id] ? 'border-primary' : 'border-transparent'}`}>
                                         <div className="flex items-center gap-3">
-                                            <Calendar className="text-accent" />
+                                            <div className="p-2 rounded-xl bg-white/5"><Calendar className="text-accent" size={20} /></div>
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-semibold">{format(new Date(workout.date), 'MMMM d, yyyy h:mm a')}</p>
                                                     {prMap[workout._id] && (
-                                                        <span className="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">New PR!</span>
+                                                        <span className="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter shadow-sm">New PR!</span>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-text-muted">
@@ -342,7 +356,7 @@ const Exercises = () => {
                                 ));
                             })()}
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
 
