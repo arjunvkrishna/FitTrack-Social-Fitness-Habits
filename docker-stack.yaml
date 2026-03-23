@@ -31,7 +31,7 @@ services:
         condition: on-failure
 
   frontend:
-    image: arjunvk/frontend:v3.4.10
+    image: arjunvk/frontend:v3.4.11
     ports:
       - "80:80"
     networks:

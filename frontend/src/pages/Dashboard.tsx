@@ -145,6 +145,15 @@ const Dashboard = () => {
         }
     };
 
+    const handleAddWater = async (amount: number) => {
+        try {
+            await axios.post('/api/habits/water', { amount });
+            fetchWaterData();
+        } catch (err) {
+            console.error('Failed to log water', err);
+        }
+    };
+
     const handleDeleteWater = async (id: string) => {
         try {
             await axios.delete(`/api/habits/water/${id}`);
@@ -247,8 +256,8 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Core Metrics Grid */}
-                <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <WaterBowl current={water} goal={waterGoal} unit="ml" />
+                <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <WaterBowl current={water} goal={waterGoal} unit="ml" onAddWater={handleAddWater} />
                     <MetricCard 
                         title="Steps" value={steps} target={stepGoal} unit="steps" 
                         icon={CheckCircle2} gradientClass="bg-gradient-to-br from-green-400 to-emerald-600" 
