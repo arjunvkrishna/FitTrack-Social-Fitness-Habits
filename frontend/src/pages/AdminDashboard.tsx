@@ -52,7 +52,8 @@ const AdminDashboard: React.FC = () => {
     });
 
     useEffect(() => {
-        if (user && user.id) {
+        const userId = user?.id || (user as any)?._id;
+        if (userId) {
             fetchUsers();
             fetchExercises();
             fetchBotToken();

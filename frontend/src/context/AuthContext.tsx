@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         if (user) {
-            axios.defaults.headers.common['X-User-ID'] = user.id;
+            axios.defaults.headers.common['X-User-ID'] = user.id || (user as any)._id;
         } else {
             delete axios.defaults.headers.common['X-User-ID'];
         }
