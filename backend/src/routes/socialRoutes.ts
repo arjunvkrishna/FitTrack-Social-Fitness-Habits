@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getPosts, createPost, likePost, commentOnPost, deletePost } from '../controllers/socialController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 

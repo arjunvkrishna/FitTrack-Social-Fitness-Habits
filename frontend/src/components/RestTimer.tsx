@@ -11,7 +11,7 @@ const RestTimer: React.FC<RestTimerProps> = () => {
     const [initialTime, setInitialTime] = useState(90);
     const [isActive, setIsActive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const timerRef = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
 
     // Listen for custom event to start timer

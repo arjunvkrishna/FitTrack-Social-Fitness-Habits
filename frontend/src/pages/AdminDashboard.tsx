@@ -120,7 +120,7 @@ const AdminDashboard: React.FC = () => {
             }
             setIsExerciseModalOpen(false);
             setEditingExercise(null);
-            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '' });
+            setExerciseFormData({ name: '', category: 'STRENGTH', targetMuscleGroup: '', defaultRestTime: null });
             fetchExercises();
         } catch (err) {
             alert('Error saving exercise');
