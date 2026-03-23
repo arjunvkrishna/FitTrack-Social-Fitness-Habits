@@ -1,91 +1,85 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Home, RefreshCw, Dumbbell, Users, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Activity, Droplets, Trophy, User as UserIcon, LogOut, Calendar, Shield, Users, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
     const { user, logout } = useAuth();
     const location = useLocation();
 
-    const getLinkClass = (path: string) => {
-        const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
-        return `flex items-center gap-2 px-4 py-2 rounded-full transition-all relative z-10 ${isActive ? 'text-white font-medium' : 'text-text-muted hover:text-white'}`;
-    };
+    if (!user) return null;
+
+    const navItems = [
+        { path: '/', icon: Home, label: 'Dashboard' },
+        { path: '/exercises', icon: Dumbbell, label: 'Exercises' },
+        { path: '/cycle', icon: RefreshCw, label: 'Cycle' },
+        { path: '/feed', icon: Users, label: 'Community' },
+        { path: '/profile', icon: User, label: 'Profile' },
+    ];
 
     return (
-        <div className="w-full flex justify-center sticky top-6 z-50 px-4 pointer-events-none">
-            <nav className="glass-nav px-3 py-2 flex items-center justify-between pointer-events-auto shadow-2xl backdrop-blur-3xl border border-white/10 w-full max-w-5xl">
-                <Link to="/" className="flex items-center gap-2 px-3 py-1 group">
-                    <div className="p-1.5 bg-gradient-to-tr from-primary to-secondary rounded-full group-hover:rotate-12 transition-transform shadow-lg shadow-primary/30">
-                        <Activity className="text-white" size={20} />
-                    </div>
-                    <span className="text-xl font-bold gradient-text tracking-tight">FitTrack</span>
-                </Link>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+            {/* The Dock Container */}
+            <motion.nav 
+                className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] rounded-[2rem] px-4 py-3 flex items-center justify-center gap-2 md:gap-4 pointer-events-auto"
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+                {navItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    const Icon = item.icon;
 
-                <div className="flex items-center gap-2">
-                    {user ? (
-                        <>
-                            <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/5">
-                                {[
-                                    { path: '/', icon: <Activity size={18} />, label: 'Overview' },
-                                    { path: '/reports', icon: <Calendar size={18} />, label: 'Reports' },
-                                    { path: '/exercises', icon: <Trophy size={18} />, label: 'Exercises' },
-                                    { path: '/feed', icon: <Users size={18} />, label: 'Feed' },
-                                ].map(link => (
-                                    <Link key={link.path} to={link.path} className={getLinkClass(link.path)}>
-                                        {location.pathname === link.path && (
-                                            <motion.div layoutId="nav-indicator" className="absolute inset-0 bg-white/10 rounded-full -z-10" transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }} />
-                                        )}
-                                        {link.icon}
-                                        <span className="text-sm">{link.label}</span>
-                                    </Link>
-                                ))}
-                                {user.gender === 'FEMALE' && (
-                                    <Link to="/cycle" className={getLinkClass('/cycle')}>
-                                        {location.pathname === '/cycle' && (
-                                            <motion.div layoutId="nav-indicator" className="absolute inset-0 bg-white/10 rounded-full -z-10" />
-                                        )}
-                                        <Calendar size={18} className="text-secondary" />
-                                        <span className="text-sm">Cycle</span>
-                                    </Link>
-                                )}
-                                {user.role === 'ADMIN' && (
-                                    <Link to="/admin" className={getLinkClass('/admin')}>
-                                        {location.pathname === '/admin' && (
-                                            <motion.div layoutId="nav-indicator" className="absolute inset-0 bg-white/10 rounded-full -z-10" />
-                                        )}
-                                        <Shield size={18} className="text-warning" />
-                                        <span className="text-sm">Admin</span>
-                                    </Link>
-                                )}
+                    return (
+                        <Link key={item.path} to={item.path} className="relative group outline-none">
+                            <motion.div
+                                className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-colors duration-300 ${
+                                    isActive 
+                                    ? 'bg-slate-100 text-blue-600 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]' 
+                                    : 'bg-transparent text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+                                }`}
+                                whileHover={{ scale: 1.3, y: -10 }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                            >
+                                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                            </motion.div>
+                            
+                            {/* Tooltip */}
+                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none shadow-lg">
+                                {item.label}
                             </div>
                             
-                            <div className="h-6 w-px bg-white/10 mx-2 hidden sm:block"></div>
-                            
-                            <div className="flex items-center gap-3">
-                                <Link to="/profile" className="flex items-center gap-2 hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors group border border-transparent hover:border-white/10">
-                                    <div className="text-right hidden lg:block">
-                                        <p className="text-sm font-semibold leading-tight">{user.name}</p>
-                                        <p className="text-xs text-accent font-medium leading-tight">{user.points} pts</p>
-                                    </div>
-                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                        <UserIcon size={16} />
-                                    </div>
-                                </Link>
-                                <button onClick={logout} className="p-2 hover:bg-red-500/20 hover:text-red-400 text-text-muted rounded-full transition-colors hidden sm:block">
-                                    <LogOut size={18} />
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex gap-3">
-                            <Link to="/login" className="px-4 py-2 text-sm font-medium text-text-muted hover:text-white transition-colors">Login</Link>
-                            <Link to="/register" className="btn-primary py-2 px-5 text-sm">Join Now</Link>
-                        </div>
-                    )}
-                </div>
-            </nav>
+                            {/* Active Dot indicator */}
+                            {isActive && (
+                                <motion.div 
+                                    layoutId="activeDockIndicator"
+                                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-blue-500"
+                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                />
+                            )}
+                        </Link>
+                    );
+                })}
+
+                <div className="w-px h-8 bg-slate-200 mx-1 rounded-full" />
+
+                {/* Logout Button */}
+                <button onClick={logout} className="relative group outline-none">
+                    <motion.div
+                        className="flex items-center justify-center w-14 h-14 rounded-2xl bg-transparent text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-colors duration-300"
+                        whileHover={{ scale: 1.3, y: -10 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                    >
+                        <LogOut size={24} strokeWidth={2} />
+                    </motion.div>
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none shadow-lg">
+                        Logout
+                    </div>
+                </button>
+            </motion.nav>
         </div>
     );
 };
